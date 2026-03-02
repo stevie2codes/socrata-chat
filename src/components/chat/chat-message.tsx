@@ -3,12 +3,16 @@
 import type { UIMessage } from "ai";
 import { isToolUIPart, getToolName } from "ai";
 import { cn } from "@/lib/utils";
+import { parseSuggestions, getHeuristicSuggestions } from "@/lib/suggestions";
 import { MarkdownContent } from "@/components/chat/markdown-content";
 import { ToolResultRenderer } from "@/components/chat/tool-result-renderer";
+import { SuggestionChips } from "@/components/chat/suggestion-chips";
 
 interface ChatMessageProps {
   message: UIMessage;
   isStreaming?: boolean;
+  isLast?: boolean;
+  onSuggestionSelect?: (suggestion: string) => void;
 }
 
 const TOOL_LABELS: Record<string, string> = {
@@ -41,10 +45,19 @@ function extractVisibleText(parts: UIMessage["parts"]): string {
     .join("\n\n");
 }
 
-export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) {
+export function ChatMessage({ message, isStreaming = false, isLast = false, onSuggestionSelect }: ChatMessageProps) {
   const isUser = message.role === "user";
 
-  const textContent = extractVisibleText(message.parts);
+  const rawText = extractVisibleText(message.parts);
+  const { cleanText: textContent, suggestions: parsedSuggestions } = parseSuggestions(rawText);
+
+  const toolNames = message.parts
+    .filter((part) => isToolUIPart(part))
+    .map((part) => getToolName(part));
+
+  const suggestions = !isStreaming && isLast
+    ? (parsedSuggestions.length > 0 ? parsedSuggestions : getHeuristicSuggestions(toolNames))
+    : [];
 
   const COMPLETED_TOOL_STATES = new Set(["output-available", "output-error", "output-denied"]);
   const activeToolPart = isStreaming
@@ -106,6 +119,10 @@ export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) 
               output={(part as Record<string, unknown>).output}
             />
           ))}
+
+        {suggestions.length > 0 && onSuggestionSelect && (
+          <SuggestionChips suggestions={suggestions} onSelect={onSuggestionSelect} />
+        )}
 
         {isStreaming && hasText && (
           <span

@@ -66,6 +66,13 @@ export default function Home() {
     [sendMessage]
   );
 
+  const handleSuggestionSelect = useCallback(
+    (suggestion: string) => {
+      sendMessage({ text: suggestion });
+    },
+    [sendMessage]
+  );
+
   useEffect(() => {
     const shortcuts = new Map<string, () => void>();
     shortcuts.set("focus-input", () => inputRef.current?.focus());
@@ -139,7 +146,7 @@ export default function Home() {
 
       <main id="main-content" role="main" className="flex min-h-0 flex-1">
         <div className="mx-auto flex w-full max-w-[720px] flex-1 flex-col">
-          <ChatMessageList messages={messages} isLoading={isLoading} />
+          <ChatMessageList messages={messages} isLoading={isLoading} onSuggestionSelect={handleSuggestionSelect} />
 
           {/* Glass bottom input bar */}
           <div className="glass mx-auto w-full max-w-[720px] border-t-0 px-4 py-3">

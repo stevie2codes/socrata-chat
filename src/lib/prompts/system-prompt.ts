@@ -87,7 +87,19 @@ function buildResponseFormatSection(): string {
 - When showing query results, describe what the data says — don't just dump raw numbers.
 - After presenting results, **suggest 2-3 follow-up actions** the user could take (e.g., filter by date range, break down by category, compare with another dataset).
 - Keep responses focused. Avoid lengthy preambles or filler.
-- If results are empty, explain possible reasons and suggest alternative queries or datasets.`;
+- If results are empty, explain possible reasons and suggest alternative queries or datasets.
+
+After your final answer, include follow-up suggestions in this exact format:
+
+\`\`\`
+<!-- suggestions -->
+- First follow-up suggestion
+- Second follow-up suggestion
+- Third follow-up suggestion (optional)
+<!-- /suggestions -->
+\`\`\`
+
+Always include 2-3 suggestions. They should be specific to the data context (e.g., "Filter by date range", "Group results by neighborhood", "Compare with building permits data").`;
 }
 
 function buildContextSection(

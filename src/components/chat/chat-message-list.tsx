@@ -10,12 +10,14 @@ interface ChatMessageListProps {
   messages: UIMessage[];
   isLoading: boolean;
   children?: ReactNode;
+  onSuggestionSelect?: (suggestion: string) => void;
 }
 
 export function ChatMessageList({
   messages,
   isLoading,
   children,
+  onSuggestionSelect,
 }: ChatMessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -37,7 +39,12 @@ export function ChatMessageList({
           if (isLast) {
             return (
               <div key={message.id} aria-live="polite">
-                <ChatMessage message={message} isStreaming={isStreamingMessage} />
+                <ChatMessage
+                  message={message}
+                  isStreaming={isStreamingMessage}
+                  isLast
+                  onSuggestionSelect={onSuggestionSelect}
+                />
               </div>
             );
           }
