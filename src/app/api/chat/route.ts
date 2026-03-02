@@ -9,7 +9,7 @@ import { getTools } from "@/lib/socrata/tool-provider";
 import { buildSystemPrompt } from "@/lib/prompts/system-prompt";
 import type { SocrataDataset, QueryFilter } from "@/types";
 
-export const maxDuration = 60;
+export const maxDuration = 120;
 
 export async function POST(req: Request) {
   const {
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     system: buildSystemPrompt({ portal, activeDataset, filters }),
     messages: await convertToModelMessages(messages),
     tools,
-    stopWhen: stepCountIs(5),
+    stopWhen: stepCountIs(10),
   });
 
   return result.toUIMessageStreamResponse();
