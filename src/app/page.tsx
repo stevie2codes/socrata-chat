@@ -21,7 +21,11 @@ export default function Home() {
   if (!transportRef.current) {
     transportRef.current = new DefaultChatTransport({
       api: "/api/chat",
-      body: () => ({ portal: portalDomainRef.current }),
+      body: () => ({
+        portal: portalDomainRef.current,
+        activeDataset: null,
+        filters: [],
+      }),
     });
   }
 
