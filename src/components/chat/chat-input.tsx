@@ -3,6 +3,7 @@
 import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { Portal } from "@/lib/portals";
 
 interface ChatInputProps {
   input: string;
@@ -10,6 +11,9 @@ interface ChatInputProps {
   onSubmit: (e: React.FormEvent) => void;
   isLoading: boolean;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  portal: Portal;
+  portals: Portal[];
+  onPortalChange: (domain: string) => void;
 }
 
 export function ChatInput({
@@ -18,12 +22,13 @@ export function ChatInput({
   onSubmit,
   isLoading,
   textareaRef,
+  portal,
+  portals,
+  onPortalChange,
 }: ChatInputProps) {
-  // Auto-resize textarea based on content
   useEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) return;
-
     textarea.style.height = "auto";
     textarea.style.height = `${Math.min(textarea.scrollHeight, 200)}px`;
   }, [input, textareaRef]);
@@ -38,12 +43,21 @@ export function ChatInput({
   };
 
   return (
-    <form
-      onSubmit={onSubmit}
-      aria-busy={isLoading}
-      className="border-border/50 bg-background sticky bottom-0 border-t px-4 py-3"
-    >
-      <div className="bg-muted/50 border-border focus-within:ring-ring/20 flex items-end gap-2 rounded-2xl border px-3 py-2 transition-shadow focus-within:ring-2">
+    <form onSubmit={onSubmit} aria-busy={isLoading}>
+      <div className="bg-muted/50 border-border focus-within:ring-ring/20 flex items-end gap-0 rounded-2xl border transition-shadow focus-within:ring-2">
+        <select
+          value={portal.domain}
+          onChange={(e) => onPortalChange(e.target.value)}
+          aria-label="Select data portal"
+          className="text-muted-foreground h-full min-h-[44px] shrink-0 cursor-pointer rounded-l-2xl bg-transparent py-2 pl-3 pr-1 text-sm outline-none"
+        >
+          {portals.map((p) => (
+            <option key={p.domain} value={p.domain}>
+              {p.label}
+            </option>
+          ))}
+        </select>
+        <div className="border-border/50 my-2 w-px shrink-0 self-stretch bg-current opacity-20" />
         <textarea
           ref={textareaRef}
           value={input}
@@ -51,10 +65,10 @@ export function ChatInput({
           onKeyDown={onKeyDown}
           readOnly={isLoading}
           aria-label="Message input"
-          placeholder="Ask about Chicago public data..."
+          placeholder={`Ask about ${portal.label} data...`}
           rows={1}
           className={cn(
-            "max-h-[200px] min-h-[40px] flex-1 resize-none bg-transparent text-sm leading-relaxed outline-none",
+            "max-h-[200px] min-h-[44px] flex-1 resize-none bg-transparent px-3 py-3 text-sm leading-relaxed outline-none",
             "placeholder:text-muted-foreground/60",
             isLoading && "cursor-not-allowed opacity-60"
           )}
@@ -65,7 +79,7 @@ export function ChatInput({
           variant="default"
           disabled={isLoading || !input.trim()}
           aria-label="Send message"
-          className="mb-0.5 shrink-0 rounded-xl"
+          className="m-1.5 shrink-0 rounded-xl"
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
