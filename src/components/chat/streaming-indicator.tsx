@@ -5,20 +5,19 @@ export function StreamingIndicator() {
     <div
       role="status"
       aria-label="Assistant is thinking"
-      className="flex items-center gap-1.5 px-4 py-3"
+      className="flex items-center gap-2 px-4 py-3"
     >
-      <span
-        className="bg-muted-foreground/50 size-2 rounded-full motion-safe:animate-[pulse-dot_1.4s_ease-in-out_infinite]"
-        style={{ animationDelay: "0ms" }}
-      />
-      <span
-        className="bg-muted-foreground/50 size-2 rounded-full motion-safe:animate-[pulse-dot_1.4s_ease-in-out_infinite]"
-        style={{ animationDelay: "200ms" }}
-      />
-      <span
-        className="bg-muted-foreground/50 size-2 rounded-full motion-safe:animate-[pulse-dot_1.4s_ease-in-out_infinite]"
-        style={{ animationDelay: "400ms" }}
-      />
+      {[0, 160, 320].map((delay) => (
+        <span
+          key={delay}
+          className="size-1.5 rounded-full"
+          style={{
+            background: "var(--primary)",
+            boxShadow: "0 0 6px var(--glow)",
+            animation: `pulse-dot 1.4s ease-in-out ${delay}ms infinite`,
+          }}
+        />
+      ))}
     </div>
   );
 }

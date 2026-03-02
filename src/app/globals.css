@@ -7,7 +7,7 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -49,83 +49,84 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+  --color-glass: var(--glass);
+  --color-glass-border: var(--glass-border);
+  --color-glass-highlight: var(--glass-highlight);
+  --color-glow: var(--glow);
 }
+
+/* ═══════════════════════════════════════════════════════════
+   Apple Glass / visionOS — Dark-first design system
+   ═══════════════════════════════════════════════════════════ */
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.55 0.12 250);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.55 0.12 250);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --data-1: oklch(0.55 0.12 250);
-  --data-2: oklch(0.65 0.14 65);
-  --data-3: oklch(0.60 0.10 155);
-  --data-4: oklch(0.58 0.16 25);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
+  --radius: 0.75rem;
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.65 0.14 250);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.65 0.14 250);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --data-1: oklch(0.65 0.14 250);
+  /* — Core surface & text — */
+  --background: oklch(0.07 0.015 270);
+  --foreground: oklch(0.96 0.005 270);
+
+  /* — Glass surfaces — */
+  --glass: oklch(1 0 0 / 0.08);
+  --glass-border: oklch(1 0 0 / 0.18);
+  --glass-highlight: oklch(1 0 0 / 0.22);
+  --glow: oklch(0.65 0.18 250);
+
+  /* — Cards & popovers — */
+  --card: oklch(0.12 0.012 270);
+  --card-foreground: oklch(0.96 0.005 270);
+  --popover: oklch(0.14 0.012 270);
+  --popover-foreground: oklch(0.96 0.005 270);
+
+  /* — Primary accent (Apple signature blue) — */
+  --primary: oklch(0.68 0.16 250);
+  --primary-foreground: oklch(0.98 0 0);
+
+  /* — Secondary surfaces — */
+  --secondary: oklch(0.16 0.01 270);
+  --secondary-foreground: oklch(0.92 0.005 270);
+
+  /* — Muted elements — */
+  --muted: oklch(0.16 0.01 270);
+  --muted-foreground: oklch(0.58 0.01 270);
+
+  /* — Accents — */
+  --accent: oklch(0.14 0.01 270);
+  --accent-foreground: oklch(0.92 0.005 270);
+
+  /* — Destructive — */
+  --destructive: oklch(0.65 0.22 25);
+
+  /* — Borders & inputs — */
+  --border: oklch(1 0 0 / 0.08);
+  --input: oklch(1 0 0 / 0.08);
+  --ring: oklch(0.68 0.16 250);
+
+  /* — Data visualization — */
+  --chart-1: oklch(0.68 0.16 250);
+  --chart-2: oklch(0.72 0.14 175);
+  --chart-3: oklch(0.78 0.16 75);
+  --chart-4: oklch(0.65 0.20 310);
+  --chart-5: oklch(0.70 0.18 25);
+  --data-1: oklch(0.68 0.16 250);
   --data-2: oklch(0.72 0.14 65);
   --data-3: oklch(0.68 0.12 155);
   --data-4: oklch(0.65 0.16 25);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+
+  /* — Sidebar — */
+  --sidebar: oklch(0.09 0.012 270);
+  --sidebar-foreground: oklch(0.92 0.005 270);
+  --sidebar-primary: oklch(0.68 0.16 250);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.14 0.01 270);
+  --sidebar-accent-foreground: oklch(0.92 0.005 270);
+  --sidebar-border: oklch(1 0 0 / 0.08);
+  --sidebar-ring: oklch(0.50 0.01 270);
+}
+
+/* — We are always dark. visionOS is dark. — */
+.dark {
+  /* Identical to :root — app is dark-first */
 }
 
 @layer base {
@@ -137,10 +138,105 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════════
+   Glass panel system
+   ═══════════════════════════════════════════════════════════ */
+
+.glass {
+  background: oklch(0.16 0.01 270 / 0.8);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid oklch(1 0 0 / 0.12);
+  box-shadow: 0 0 0 0.5px oklch(1 0 0 / 0.06) inset;
+}
+
+.glass-strong {
+  background: oklch(0.14 0.015 260 / 0.85);
+  backdrop-filter: blur(60px) saturate(200%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%);
+  border: 1px solid oklch(1 0 0 / 0.16);
+  box-shadow:
+    0 0 0 0.5px oklch(1 0 0 / 0.08) inset,
+    0 8px 40px oklch(0 0 0 / 0.4),
+    0 0 80px oklch(0.5 0.12 250 / 0.06);
+}
+
+.glass-subtle {
+  background: oklch(0.12 0.01 270 / 0.6);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid oklch(1 0 0 / 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Ambient background — visionOS spatial orbs
+   ═══════════════════════════════════════════════════════════ */
+
+.ambient-bg {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  will-change: transform;
+}
+
+.ambient-orb-1 {
+  top: -10%;
+  right: -5%;
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, oklch(0.40 0.20 250 / 0.45), transparent 70%);
+  animation: float-orb-1 22s ease-in-out infinite;
+}
+
+.ambient-orb-2 {
+  bottom: -10%;
+  left: -5%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, oklch(0.35 0.16 300 / 0.35), transparent 70%);
+  animation: float-orb-2 28s ease-in-out infinite;
+}
+
+.ambient-orb-3 {
+  top: 30%;
+  left: 40%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, oklch(0.30 0.12 220 / 0.20), transparent 70%);
+  animation: float-orb-3 32s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Keyframes
+   ═══════════════════════════════════════════════════════════ */
+
+@keyframes float-orb-1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-30px, 40px) scale(1.05); }
+  66% { transform: translate(20px, -20px) scale(0.97); }
+}
+
+@keyframes float-orb-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, -30px) scale(1.08); }
+  66% { transform: translate(-20px, 25px) scale(0.95); }
+}
+
+@keyframes float-orb-3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(25px, -35px) scale(1.04); }
+}
+
 @keyframes pulse-dot {
-  0%,
-  80%,
-  100% {
+  0%, 80%, 100% {
     opacity: 0.3;
     transform: scale(0.8);
   }
@@ -151,10 +247,73 @@
 }
 
 @keyframes shimmer {
-  0% {
-    transform: translateX(-100%);
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
   }
-  100% {
-    transform: translateX(100%);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Noise texture overlay for depth
+   ═══════════════════════════════════════════════════════════ */
+
+.noise-overlay::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.015;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 256px 256px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Custom scrollbar — thin, glass-styled
+   ═══════════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: oklch(1 0 0 / 0.12);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: oklch(1 0 0 / 0.2);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Selection highlight
+   ═══════════════════════════════════════════════════════════ */
+
+::selection {
+  background: oklch(0.68 0.16 250 / 0.35);
+  color: white;
 }
