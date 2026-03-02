@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef } from "react";
+import { cn } from "@/lib/utils";
 
 interface StarterPromptsProps {
   suggestions: string[];
@@ -39,8 +40,9 @@ export function StarterPrompts({ suggestions, onSelect }: StarterPromptsProps) {
     <div
       role="toolbar"
       aria-label="Suggested starting questions"
-      className="flex flex-wrap justify-center gap-x-4 gap-y-2"
+      className="flex flex-wrap justify-center gap-2.5"
       onKeyDown={handleKeyDown}
+      style={{ animation: "fade-in 1s ease-out 0.4s both" }}
     >
       {suggestions.map((prompt, index) => (
         <button
@@ -49,7 +51,13 @@ export function StarterPrompts({ suggestions, onSelect }: StarterPromptsProps) {
             buttonRefs.current[index] = el;
           }}
           type="button"
-          className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 transition-colors hover:underline"
+          className={cn(
+            "glass-subtle rounded-full px-4 py-2 text-[13px] font-medium text-muted-foreground",
+            "transition-all duration-300",
+            "hover:bg-glass-highlight hover:text-foreground/90",
+            "hover:shadow-[0_0_20px_oklch(0.68_0.16_250_/_0.12)]",
+            "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40"
+          )}
           tabIndex={index === 0 ? 0 : -1}
           onClick={() => onSelect(prompt)}
         >

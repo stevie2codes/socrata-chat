@@ -20,10 +20,10 @@ export function KeyboardHelpDialog({
 }: KeyboardHelpDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="glass-strong sm:max-w-md border-glass-border bg-transparent">
         <DialogHeader>
-          <DialogTitle>Keyboard Shortcuts</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-foreground/90">Keyboard Shortcuts</DialogTitle>
+          <DialogDescription className="text-muted-foreground">
             Navigate the interface quickly with these shortcuts.
           </DialogDescription>
         </DialogHeader>
@@ -35,21 +35,21 @@ export function KeyboardHelpDialog({
               className="flex items-center justify-between gap-4"
               role="listitem"
             >
-              <span className="text-muted-foreground text-sm">
+              <span className="text-sm text-muted-foreground">
                 {description}
               </span>
               <span className="flex shrink-0 items-center gap-1.5">
                 {keys.map((key, index) => (
                   <span key={key} className="flex items-center gap-1.5">
                     {index > 0 && (
-                      <span className="text-muted-foreground text-xs">or</span>
+                      <span className="text-xs text-muted-foreground/60">or</span>
                     )}
                     {key.split("+").map((part, partIndex) => (
                       <span key={partIndex} className="flex items-center gap-0.5">
                         {partIndex > 0 && (
-                          <span className="text-muted-foreground text-xs">+</span>
+                          <span className="text-xs text-muted-foreground/60">+</span>
                         )}
-                        <kbd className="bg-muted text-muted-foreground border-border inline-flex h-6 min-w-6 items-center justify-center rounded-md border px-1.5 font-mono text-xs font-medium">
+                        <kbd className="glass inline-flex h-6 min-w-6 items-center justify-center rounded-lg px-1.5 font-mono text-xs font-medium text-muted-foreground">
                           {part}
                         </kbd>
                       </span>

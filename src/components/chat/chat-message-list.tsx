@@ -29,7 +29,7 @@ export function ChatMessageList({
 
   return (
     <ScrollArea className="flex-1">
-      <div className="flex flex-col gap-4 px-4 py-6">
+      <div className="flex flex-col gap-5 px-4 py-8">
         {messages.map((message, index) => {
           const isLast = index === messages.length - 1;
           const isStreamingMessage = isLast && isLoading && message.role === "assistant";

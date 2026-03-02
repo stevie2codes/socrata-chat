@@ -83,15 +83,23 @@ export default function Home() {
 
   if (isHero) {
     return (
-      <div className="flex h-dvh flex-col items-center justify-center px-4">
-        <div className="flex w-full max-w-2xl flex-col items-center gap-8">
-          <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="text-2xl font-bold tracking-tight">
+      <div className="relative z-10 flex h-dvh flex-col items-center justify-center px-4">
+        <div
+          className="flex w-full max-w-[720px] flex-col items-center gap-10"
+          style={{ animation: "fade-in-up 0.8s ease-out both" }}
+        >
+          {/* Hero title */}
+          <div className="flex flex-col items-center gap-3 text-center">
+            <h1 className="text-[2rem] font-semibold tracking-tight text-foreground/95">
               Open Data Reports
             </h1>
+            <p className="max-w-md text-sm font-light tracking-wide text-muted-foreground">
+              Explore millions of public records with natural language
+            </p>
           </div>
 
-          <div className="w-full">
+          {/* Glass chat panel — the hero centerpiece */}
+          <div className="glass-strong w-full rounded-3xl p-1.5">
             <ChatInput
               input={input}
               onInputChange={setInput}
@@ -101,9 +109,11 @@ export default function Home() {
               portal={portal}
               portals={PORTALS}
               onPortalChange={handlePortalChange}
+              variant="hero"
             />
           </div>
 
+          {/* Starter prompts */}
           <StarterPrompts
             suggestions={portal.suggestions}
             onSelect={handleStarterSelect}
@@ -116,17 +126,23 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-dvh flex-col">
-      <header className="border-border/50 flex shrink-0 items-center justify-between border-b px-4 py-3">
-        <h1 className="text-sm font-semibold">Open Data Reports</h1>
-        <span className="text-muted-foreground text-xs">{portal.label}</span>
+    <div className="relative z-10 flex h-dvh flex-col">
+      {/* Glass header */}
+      <header className="glass-subtle flex shrink-0 items-center justify-between px-5 py-3">
+        <h1 className="text-sm font-semibold tracking-tight text-foreground/90">
+          Open Data Reports
+        </h1>
+        <span className="rounded-full bg-glass px-3 py-1 text-xs font-medium text-muted-foreground">
+          {portal.label}
+        </span>
       </header>
 
       <main id="main-content" role="main" className="flex min-h-0 flex-1">
-        <div className="mx-auto flex w-full max-w-[680px] flex-1 flex-col">
+        <div className="mx-auto flex w-full max-w-[720px] flex-1 flex-col">
           <ChatMessageList messages={messages} isLoading={isLoading} />
 
-          <div className="border-border/50 bg-background sticky bottom-0 mx-auto w-full max-w-[680px] border-t px-4 py-3">
+          {/* Glass bottom input bar */}
+          <div className="glass mx-auto w-full max-w-[720px] border-t-0 px-4 py-3">
             <ChatInput
               input={input}
               onInputChange={setInput}

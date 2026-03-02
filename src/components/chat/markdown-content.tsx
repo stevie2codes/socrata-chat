@@ -12,11 +12,11 @@ function CollapsibleTable({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="border-data-1/30 my-4 border-l-2">
+    <div className="my-4 border-l-2" style={{ borderColor: "oklch(0.68 0.16 250 / 0.3)" }}>
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="text-muted-foreground hover:text-foreground flex items-center gap-2 px-3 py-2 text-xs transition-colors"
+        className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <svg
           className={`size-3 transition-transform ${open ? "rotate-90" : ""}`}
@@ -59,13 +59,16 @@ const components = {
     const isBlock = className?.includes("language-");
     if (isBlock) {
       return (
-        <code className={`${className} bg-muted block overflow-x-auto rounded-md p-3 font-mono text-xs`} {...props}>
+        <code
+          className={`${className} glass block overflow-x-auto rounded-xl p-4 font-mono text-xs`}
+          {...props}
+        >
           {children}
         </code>
       );
     }
     return (
-      <code className="bg-muted rounded px-1.5 py-0.5 font-mono text-xs" {...props}>
+      <code className="rounded-md bg-glass px-1.5 py-0.5 font-mono text-xs" {...props}>
         {children}
       </code>
     );
@@ -88,7 +91,7 @@ const components = {
     </CollapsibleTable>
   ),
   thead: ({ children, ...props }: ComponentPropsWithoutRef<"thead">) => (
-    <thead className="bg-data-1/5 border-b" {...props}>
+    <thead className="border-b border-glass-border bg-glass" {...props}>
       {children}
     </thead>
   ),
@@ -98,7 +101,7 @@ const components = {
     </th>
   ),
   td: ({ children, ...props }: ComponentPropsWithoutRef<"td">) => (
-    <td className="border-border/50 border-t px-3 py-2 font-mono whitespace-nowrap" {...props}>
+    <td className="border-t border-glass-border px-3 py-2 font-mono whitespace-nowrap" {...props}>
       {children}
     </td>
   ),
