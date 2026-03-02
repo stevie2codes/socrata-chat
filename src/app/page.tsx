@@ -1,7 +1,7 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
+import { DefaultChatTransport, type UIMessage } from "ai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatMessageList } from "@/components/chat/chat-message-list";
 import { ChatInput } from "@/components/chat/chat-input";
@@ -11,14 +11,24 @@ import { createShortcutHandler } from "@/lib/keyboard-shortcuts";
 import { PORTALS, DEFAULT_PORTAL, findPortal } from "@/lib/portals";
 import { useSessionDispatch } from "@/lib/session/session-context";
 
-const transport = new DefaultChatTransport({ api: "/api/chat" });
-
 export default function Home() {
-  const { messages, sendMessage, status } = useChat({ transport });
-  const dispatch = useSessionDispatch();
-
   const [input, setInput] = useState("");
   const [portalDomain, setPortalDomain] = useState(DEFAULT_PORTAL.domain);
+  const portalDomainRef = useRef(portalDomain);
+  portalDomainRef.current = portalDomain;
+
+  const transportRef = useRef<DefaultChatTransport<UIMessage> | null>(null);
+  if (!transportRef.current) {
+    transportRef.current = new DefaultChatTransport({
+      api: "/api/chat",
+      body: () => ({ portal: portalDomainRef.current }),
+    });
+  }
+
+  const { messages, sendMessage, status } = useChat({
+    transport: transportRef.current,
+  });
+  const dispatch = useSessionDispatch();
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const [showHelp, setShowHelp] = useState(false);
 

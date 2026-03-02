@@ -4,11 +4,16 @@ import { anthropic } from "@ai-sdk/anthropic";
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { messages }: { messages: UIMessage[] } = await req.json();
+  const {
+    messages,
+    portal = "data.cityofchicago.org",
+  }: { messages: UIMessage[]; portal?: string } = await req.json();
 
   const result = streamText({
     model: anthropic("claude-sonnet-4-20250514"),
-    system: `You are a friendly data exploration assistant for Chicago's open data portal (data.cityofchicago.org). You help users discover and query public datasets using natural language.
+    system: `You are a friendly data exploration assistant for public open data portals. You are currently connected to the ${portal} Socrata portal.
+
+You help users discover and query public datasets using natural language.
 
 For now, respond conversationally. In future updates, you'll have access to tools for searching and querying Socrata datasets directly.
 

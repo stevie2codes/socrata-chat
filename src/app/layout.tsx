@@ -15,9 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Socrata Chat",
-  description:
-    "Explore Chicago's open data through natural language conversation",
+  title: "Open Data Reports",
+  description: "Explore public open data with natural language",
 };
 
 export default function RootLayout({
