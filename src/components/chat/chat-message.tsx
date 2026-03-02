@@ -16,13 +16,34 @@ const TOOL_LABELS: Record<string, string> = {
   query_dataset: "Querying data",
 };
 
+function extractVisibleText(parts: UIMessage["parts"]): string {
+  const COMPLETED = new Set(["output-available", "output-error", "output-denied"]);
+
+  let lastCompletedToolIndex = -1;
+  for (let i = parts.length - 1; i >= 0; i--) {
+    if (isToolUIPart(parts[i]) && COMPLETED.has((parts[i] as any).state)) {
+      lastCompletedToolIndex = i;
+      break;
+    }
+  }
+
+  // No tools called — show all text (plain conversation)
+  if (lastCompletedToolIndex === -1) {
+    return parts.filter((p) => p.type === "text").map((p) => p.text).join("\n\n");
+  }
+
+  // Only text after the last completed tool
+  return parts
+    .slice(lastCompletedToolIndex + 1)
+    .filter((p) => p.type === "text")
+    .map((p) => p.text)
+    .join("\n\n");
+}
+
 export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) {
   const isUser = message.role === "user";
 
-  const textContent = message.parts
-    .filter((part) => part.type === "text")
-    .map((part) => part.text)
-    .join("\n\n");
+  const textContent = extractVisibleText(message.parts);
 
   const COMPLETED_TOOL_STATES = new Set(["output-available", "output-error", "output-denied"]);
   const activeToolPart = isStreaming
