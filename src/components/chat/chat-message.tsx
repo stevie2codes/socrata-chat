@@ -4,6 +4,7 @@ import type { UIMessage } from "ai";
 import { isToolUIPart, getToolName } from "ai";
 import { cn } from "@/lib/utils";
 import { MarkdownContent } from "@/components/chat/markdown-content";
+import { ToolResultRenderer } from "@/components/chat/tool-result-renderer";
 
 interface ChatMessageProps {
   message: UIMessage;
@@ -91,6 +92,20 @@ export function ChatMessage({ message, isStreaming = false }: ChatMessageProps) 
     <article role="article" aria-label={ariaLabel} className="flex w-full justify-start">
       <div className="max-w-full text-sm leading-[1.7]">
         {hasText && <MarkdownContent content={textContent} />}
+
+        {/* Render completed tool results */}
+        {message.parts
+          .filter(
+            (part): part is Extract<typeof part, { state: string }> =>
+              isToolUIPart(part) && part.state === "output-available"
+          )
+          .map((part, i) => (
+            <ToolResultRenderer
+              key={i}
+              toolName={getToolName(part as Parameters<typeof getToolName>[0])}
+              output={(part as Record<string, unknown>).output}
+            />
+          ))}
 
         {isStreaming && hasText && (
           <span

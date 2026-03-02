@@ -1,6 +1,8 @@
 "use client";
 
 import type { CatalogResult, QueryResult } from "@/lib/socrata/api-client";
+import { DatasetCardList } from "@/components/data/dataset-card-list";
+import { DataTable } from "@/components/data/data-table";
 
 interface ToolResultRendererProps {
   toolName: string;
@@ -31,22 +33,11 @@ export function ToolResultRenderer({
   output,
 }: ToolResultRendererProps) {
   if (toolName === "search_datasets" && isCatalogResults(output)) {
-    // Will be replaced by DatasetCardList in Task 3
-    return (
-      <div className="my-3 text-xs text-muted-foreground">
-        {output.length} dataset{output.length !== 1 ? "s" : ""} found
-      </div>
-    );
+    return <DatasetCardList datasets={output} />;
   }
 
   if (toolName === "query_dataset" && isQueryResult(output)) {
-    // Will be replaced by DataTable in Task 4
-    return (
-      <div className="my-3 text-xs text-muted-foreground">
-        {output.totalRows} row{output.totalRows !== 1 ? "s" : ""} returned in{" "}
-        {output.executionTimeMs}ms
-      </div>
-    );
+    return <DataTable result={output} />;
   }
 
   // get_dataset_info and other tools: don't render
