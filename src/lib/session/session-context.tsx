@@ -2,10 +2,12 @@
 
 import { createContext, useContext, type Dispatch } from "react";
 import type { SessionState, SocrataDataset, QueryFilter } from "@/types";
+import { DEFAULT_PORTAL } from "@/lib/portals";
 
 // Action types
 
 export type SessionAction =
+  | { type: "SET_PORTAL"; payload: string }
   | { type: "SET_DATASET"; payload: SocrataDataset | null }
   | { type: "ADD_FILTER"; payload: QueryFilter }
   | { type: "REMOVE_FILTER"; payload: number }
@@ -16,7 +18,7 @@ export type SessionAction =
 
 function createInitialState(): SessionState {
   return {
-    portal: "data.cityofchicago.org",
+    portal: DEFAULT_PORTAL.domain,
     activeDataset: null,
     filters: [],
     conversationId: crypto.randomUUID(),
@@ -32,6 +34,13 @@ export function sessionReducer(
   action: SessionAction
 ): SessionState {
   switch (action.type) {
+    case "SET_PORTAL":
+      return {
+        ...state,
+        portal: action.payload,
+        activeDataset: null,
+        filters: [],
+      };
     case "SET_DATASET":
       return {
         ...state,
