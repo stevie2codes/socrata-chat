@@ -50,9 +50,12 @@ export function SuggestionChips({ suggestions, onSelect }: SuggestionChipsProps)
           ref={(el) => { buttonRefs.current[index] = el; }}
           type="button"
           className={cn(
-            "glass-subtle rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground",
+            "rounded-full px-3 py-1.5 text-xs font-medium",
+            "bg-white/[0.07] text-foreground/60",
+            "border border-white/[0.12]",
             "transition-all duration-200",
-            "hover:text-foreground/90 hover:bg-glass-highlight",
+            "hover:bg-white/[0.14] hover:text-foreground/90 hover:border-white/[0.2]",
+            "hover:shadow-[0_0_16px_oklch(0.68_0.16_250_/_0.12)]",
             "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40"
           )}
           tabIndex={index === 0 ? 0 : -1}

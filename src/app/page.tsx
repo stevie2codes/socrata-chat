@@ -106,7 +106,7 @@ export default function Home() {
           </div>
 
           {/* Glass chat panel — the hero centerpiece */}
-          <div className="glass-strong w-full rounded-3xl p-1.5">
+          <div className="glass-strong w-full rounded-3xl p-1.5 shadow-[0_0_80px_oklch(0.55_0.14_250_/_0.12)]">
             <ChatInput
               input={input}
               onInputChange={setInput}
@@ -135,11 +135,11 @@ export default function Home() {
   return (
     <div className="relative z-10 flex h-dvh flex-col">
       {/* Glass header */}
-      <header className="glass-subtle flex shrink-0 items-center justify-between px-5 py-3">
+      <header className="glass-subtle flex shrink-0 items-center justify-between border-b border-white/[0.08] px-5 py-3">
         <h1 className="text-sm font-semibold tracking-tight text-foreground/90">
           Open Data Reports
         </h1>
-        <span className="rounded-full bg-glass px-3 py-1 text-xs font-medium text-muted-foreground">
+        <span className="rounded-full bg-white/[0.08] border border-white/[0.1] px-3 py-1 text-xs font-medium text-muted-foreground">
           {portal.label}
         </span>
       </header>

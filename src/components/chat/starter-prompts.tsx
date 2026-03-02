@@ -52,10 +52,12 @@ export function StarterPrompts({ suggestions, onSelect }: StarterPromptsProps) {
           }}
           type="button"
           className={cn(
-            "glass-subtle rounded-full px-4 py-2 text-[13px] font-medium text-muted-foreground",
+            "rounded-full px-4 py-2 text-[13px] font-medium",
+            "bg-white/[0.07] text-foreground/60",
+            "border border-white/[0.12]",
             "transition-all duration-300",
-            "hover:bg-glass-highlight hover:text-foreground/90",
-            "hover:shadow-[0_0_20px_oklch(0.68_0.16_250_/_0.12)]",
+            "hover:bg-white/[0.14] hover:text-foreground/90 hover:border-white/[0.2]",
+            "hover:shadow-[0_0_24px_oklch(0.68_0.16_250_/_0.15)]",
             "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring/40"
           )}
           tabIndex={index === 0 ? 0 : -1}

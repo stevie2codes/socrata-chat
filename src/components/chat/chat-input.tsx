@@ -2,6 +2,7 @@
 
 import React, { useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { PortalSelector } from "@/components/chat/portal-selector";
 import { cn } from "@/lib/utils";
 import type { Portal } from "@/lib/portals";
 
@@ -59,8 +60,8 @@ export function ChatInput({
       >
         {/* Textarea area */}
         <div className={cn(
-          "px-3",
-          isHero ? "pt-3 pb-1" : "pt-2 pb-1"
+          "px-4",
+          isHero ? "pt-4 pb-2" : "pt-2 pb-1"
         )}>
           <textarea
             ref={textareaRef}
@@ -73,9 +74,9 @@ export function ChatInput({
             rows={isHero ? 3 : 1}
             className={cn(
               "w-full flex-1 resize-none bg-transparent leading-relaxed outline-none",
-              "placeholder:text-foreground/30",
+              "placeholder:text-muted-foreground/50",
               isHero
-                ? "min-h-[120px] text-[15px] font-light"
+                ? "min-h-[100px] text-[15px] font-light"
                 : "min-h-[44px] text-sm",
               isLoading && "cursor-not-allowed opacity-60"
             )}
@@ -83,22 +84,15 @@ export function ChatInput({
         </div>
 
         {/* Bottom bar: portal selector (left) + send button (right) */}
-        <div className="flex items-center justify-between border-t border-white/[0.06] px-3 py-2">
-          <select
-            value={portal.domain}
-            onChange={(e) => onPortalChange(e.target.value)}
-            aria-label="Select data portal"
-            className={cn(
-              "cursor-pointer rounded-xl px-3 py-1.5 text-xs font-medium text-foreground/60 outline-none transition-colors hover:text-foreground/80",
-              "bg-white/[0.06] border border-white/[0.1] focus:border-ring/30"
-            )}
-          >
-            {portals.map((p) => (
-              <option key={p.domain} value={p.domain} className="bg-background text-foreground">
-                {p.label}
-              </option>
-            ))}
-          </select>
+        <div className={cn(
+          "flex items-center justify-between px-3 py-2.5",
+          "border-t border-white/[0.1]"
+        )}>
+          <PortalSelector
+            portal={portal}
+            portals={portals}
+            onPortalChange={onPortalChange}
+          />
 
           <Button
             type="submit"
@@ -106,11 +100,11 @@ export function ChatInput({
             disabled={isLoading || !input.trim()}
             aria-label="Send message"
             className={cn(
-              "shrink-0 rounded-xl border-0 transition-all",
-              "bg-primary/90 text-primary-foreground hover:bg-primary",
-              "shadow-[0_0_20px_oklch(0.68_0.16_250_/_0.3)]",
-              "hover:shadow-[0_0_28px_oklch(0.68_0.16_250_/_0.45)]",
-              "disabled:bg-glass disabled:text-muted-foreground disabled:shadow-none"
+              "shrink-0 rounded-xl border-0 transition-all duration-300",
+              "bg-primary text-primary-foreground hover:bg-primary/90",
+              "shadow-[0_0_24px_oklch(0.68_0.16_250_/_0.35)]",
+              "hover:shadow-[0_0_32px_oklch(0.68_0.16_250_/_0.5)]",
+              "disabled:bg-white/[0.08] disabled:text-muted-foreground disabled:shadow-none"
             )}
           >
             <svg
