@@ -8,17 +8,31 @@ import { ChatInput } from "@/components/chat/chat-input";
 import { StarterPrompts } from "@/components/chat/starter-prompts";
 import { KeyboardHelpDialog } from "@/components/chat/keyboard-help-dialog";
 import { createShortcutHandler } from "@/lib/keyboard-shortcuts";
+import { PORTALS, DEFAULT_PORTAL, findPortal } from "@/lib/portals";
+import { useSessionDispatch } from "@/lib/session/session-context";
 
 const transport = new DefaultChatTransport({ api: "/api/chat" });
 
 export default function Home() {
   const { messages, sendMessage, status } = useChat({ transport });
+  const dispatch = useSessionDispatch();
 
   const [input, setInput] = useState("");
+  const [portalDomain, setPortalDomain] = useState(DEFAULT_PORTAL.domain);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const [showHelp, setShowHelp] = useState(false);
 
+  const portal = findPortal(portalDomain) ?? DEFAULT_PORTAL;
   const isLoading = status === "streaming" || status === "submitted";
+  const isHero = messages.length === 0;
+
+  const handlePortalChange = useCallback(
+    (domain: string) => {
+      setPortalDomain(domain);
+      dispatch({ type: "SET_PORTAL", payload: domain });
+    },
+    [dispatch]
+  );
 
   const handleSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -38,10 +52,8 @@ export default function Home() {
     [sendMessage]
   );
 
-  // Register keyboard shortcuts
   useEffect(() => {
     const shortcuts = new Map<string, () => void>();
-
     shortcuts.set("focus-input", () => inputRef.current?.focus());
     shortcuts.set("focus-input-alt", () => inputRef.current?.focus());
     shortcuts.set("show-help", () => setShowHelp(true));
@@ -50,35 +62,71 @@ export default function Home() {
         document.activeElement.blur();
       }
     });
-    // toggle-sidebar and export-results will be wired in later phases
-
     const handler = createShortcutHandler(shortcuts);
     document.addEventListener("keydown", handler);
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
+  if (isHero) {
+    return (
+      <div className="flex h-dvh flex-col items-center justify-center px-4">
+        <div className="flex w-full max-w-2xl flex-col items-center gap-8">
+          <div className="flex flex-col items-center gap-2 text-center">
+            <h1 className="text-3xl font-semibold tracking-tight">
+              Open Data Reports
+            </h1>
+            <p className="text-muted-foreground text-sm">
+              Explore public data with natural language
+            </p>
+          </div>
+
+          <div className="w-full">
+            <ChatInput
+              input={input}
+              onInputChange={setInput}
+              onSubmit={handleSubmit}
+              isLoading={isLoading}
+              textareaRef={inputRef}
+              portal={portal}
+              portals={PORTALS}
+              onPortalChange={handlePortalChange}
+            />
+          </div>
+
+          <StarterPrompts
+            suggestions={portal.suggestions}
+            onSelect={handleStarterSelect}
+          />
+        </div>
+
+        <KeyboardHelpDialog open={showHelp} onOpenChange={setShowHelp} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-dvh flex-col">
       <header className="border-border/50 flex shrink-0 items-center justify-between border-b px-4 py-3">
-        <h1 className="text-sm font-semibold">Socrata Chat</h1>
-        <span className="text-muted-foreground text-xs">
-          data.cityofchicago.org
-        </span>
+        <h1 className="text-sm font-semibold">Open Data Reports</h1>
+        <span className="text-muted-foreground text-xs">{portal.label}</span>
       </header>
 
       <main id="main-content" role="main" className="flex min-h-0 flex-1">
         <div className="flex flex-1 flex-col">
-          <ChatMessageList messages={messages} isLoading={isLoading}>
-            <StarterPrompts onSelect={handleStarterSelect} />
-          </ChatMessageList>
+          <ChatMessageList messages={messages} isLoading={isLoading} />
 
-          <ChatInput
-            input={input}
-            onInputChange={setInput}
-            onSubmit={handleSubmit}
-            isLoading={isLoading}
-            textareaRef={inputRef}
-          />
+          <div className="border-border/50 bg-background sticky bottom-0 border-t px-4 py-3">
+            <ChatInput
+              input={input}
+              onInputChange={setInput}
+              onSubmit={handleSubmit}
+              isLoading={isLoading}
+              textareaRef={inputRef}
+              portal={portal}
+              portals={PORTALS}
+              onPortalChange={handlePortalChange}
+            />
+          </div>
         </div>
       </main>
 
