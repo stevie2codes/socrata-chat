@@ -32,11 +32,12 @@ export function ChatMessageList({
       <div className="flex flex-col gap-4 px-4 py-6">
         {messages.map((message, index) => {
           const isLast = index === messages.length - 1;
+          const isStreamingMessage = isLast && isLoading && message.role === "assistant";
 
           if (isLast) {
             return (
               <div key={message.id} aria-live="polite">
-                <ChatMessage message={message} />
+                <ChatMessage message={message} isStreaming={isStreamingMessage} />
               </div>
             );
           }
@@ -44,7 +45,9 @@ export function ChatMessageList({
           return <ChatMessage key={message.id} message={message} />;
         })}
 
-        {isLoading && <StreamingIndicator />}
+        {isLoading && messages.length > 0 && messages[messages.length - 1].role === "user" && (
+          <StreamingIndicator />
+        )}
 
         <div ref={bottomRef} aria-hidden="true" />
       </div>
