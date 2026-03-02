@@ -86,12 +86,9 @@ export default function Home() {
       <div className="flex h-dvh flex-col items-center justify-center px-4">
         <div className="flex w-full max-w-2xl flex-col items-center gap-8">
           <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="text-3xl font-semibold tracking-tight">
+            <h1 className="text-2xl font-bold tracking-tight">
               Open Data Reports
             </h1>
-            <p className="text-muted-foreground text-sm">
-              Explore public data with natural language
-            </p>
           </div>
 
           <div className="w-full">
@@ -126,10 +123,10 @@ export default function Home() {
       </header>
 
       <main id="main-content" role="main" className="flex min-h-0 flex-1">
-        <div className="flex flex-1 flex-col">
+        <div className="mx-auto flex w-full max-w-[680px] flex-1 flex-col">
           <ChatMessageList messages={messages} isLoading={isLoading} />
 
-          <div className="border-border/50 bg-background sticky bottom-0 border-t px-4 py-3">
+          <div className="border-border/50 bg-background sticky bottom-0 mx-auto w-full max-w-[680px] border-t px-4 py-3">
             <ChatInput
               input={input}
               onInputChange={setInput}

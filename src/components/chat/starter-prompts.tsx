@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useRef } from "react";
-import { Button } from "@/components/ui/button";
 
 interface StarterPromptsProps {
   suggestions: string[];
@@ -40,22 +39,22 @@ export function StarterPrompts({ suggestions, onSelect }: StarterPromptsProps) {
     <div
       role="toolbar"
       aria-label="Suggested starting questions"
-      className="flex flex-wrap justify-center gap-2"
+      className="flex flex-wrap justify-center gap-x-4 gap-y-2"
       onKeyDown={handleKeyDown}
     >
       {suggestions.map((prompt, index) => (
-        <Button
+        <button
           key={prompt}
           ref={(el) => {
             buttonRefs.current[index] = el;
           }}
-          variant="outline"
-          className="h-auto rounded-full px-4 py-2 text-sm"
+          type="button"
+          className="text-muted-foreground hover:text-foreground text-sm underline-offset-4 transition-colors hover:underline"
           tabIndex={index === 0 ? 0 : -1}
           onClick={() => onSelect(prompt)}
         >
-          {prompt}
-        </Button>
+          {prompt.toLowerCase()}
+        </button>
       ))}
     </div>
   );
