@@ -8,12 +8,15 @@ import { MarkdownContent } from "@/components/chat/markdown-content";
 import { ToolResultRenderer } from "@/components/chat/tool-result-renderer";
 import { ErrorCallout } from "@/components/data/error-callout";
 import { SuggestionChips } from "@/components/chat/suggestion-chips";
+import type { QueryConfirmation } from "@/types";
 
 interface ChatMessageProps {
   message: UIMessage;
   isStreaming?: boolean;
   isLast?: boolean;
   onSuggestionSelect?: (suggestion: string) => void;
+  onConfirmRun?: (confirmation: QueryConfirmation) => void;
+  onConfirmAdjust?: () => void;
 }
 
 const TOOL_LABELS: Record<string, string> = {
@@ -46,7 +49,7 @@ function extractVisibleText(parts: UIMessage["parts"]): string {
     .join("\n\n");
 }
 
-export function ChatMessage({ message, isStreaming = false, isLast = false, onSuggestionSelect }: ChatMessageProps) {
+export function ChatMessage({ message, isStreaming = false, isLast = false, onSuggestionSelect, onConfirmRun, onConfirmAdjust }: ChatMessageProps) {
   const isUser = message.role === "user";
 
   const rawText = extractVisibleText(message.parts);
@@ -118,6 +121,8 @@ export function ChatMessage({ message, isStreaming = false, isLast = false, onSu
               key={i}
               toolName={getToolName(part as Parameters<typeof getToolName>[0])}
               output={(part as Record<string, unknown>).output}
+              onConfirmRun={onConfirmRun}
+              onConfirmAdjust={onConfirmAdjust}
             />
           ))}
 

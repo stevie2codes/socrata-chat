@@ -5,12 +5,15 @@ import type { UIMessage } from "ai";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChatMessage } from "@/components/chat/chat-message";
 import { StreamingIndicator } from "@/components/chat/streaming-indicator";
+import type { QueryConfirmation } from "@/types";
 
 interface ChatMessageListProps {
   messages: UIMessage[];
   isLoading: boolean;
   children?: ReactNode;
   onSuggestionSelect?: (suggestion: string) => void;
+  onConfirmRun?: (confirmation: QueryConfirmation) => void;
+  onConfirmAdjust?: () => void;
 }
 
 export function ChatMessageList({
@@ -18,6 +21,8 @@ export function ChatMessageList({
   isLoading,
   children,
   onSuggestionSelect,
+  onConfirmRun,
+  onConfirmAdjust,
 }: ChatMessageListProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -44,12 +49,14 @@ export function ChatMessageList({
                   isStreaming={isStreamingMessage}
                   isLast
                   onSuggestionSelect={onSuggestionSelect}
+                  onConfirmRun={onConfirmRun}
+                  onConfirmAdjust={onConfirmAdjust}
                 />
               </div>
             );
           }
 
-          return <ChatMessage key={message.id} message={message} />;
+          return <ChatMessage key={message.id} message={message} onConfirmRun={onConfirmRun} onConfirmAdjust={onConfirmAdjust} />;
         })}
 
         {isLoading && messages.length > 0 && messages[messages.length - 1].role === "user" && (

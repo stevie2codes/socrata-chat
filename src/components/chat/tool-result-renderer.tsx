@@ -1,12 +1,16 @@
 "use client";
 
 import type { CatalogResult, QueryResult } from "@/lib/socrata/api-client";
+import type { QueryConfirmation } from "@/types";
 import { DatasetCardList } from "@/components/data/dataset-card-list";
 import { DataTable } from "@/components/data/data-table";
+import { QueryConfirmationCard } from "@/components/data/query-confirmation-card";
 
 interface ToolResultRendererProps {
   toolName: string;
   output: unknown;
+  onConfirmRun?: (confirmation: QueryConfirmation) => void;
+  onConfirmAdjust?: () => void;
 }
 
 function isCatalogResults(output: unknown): output is CatalogResult[] {
@@ -28,18 +32,39 @@ function isQueryResult(output: unknown): output is QueryResult {
   );
 }
 
+function isQueryConfirmation(output: unknown): output is QueryConfirmation {
+  return (
+    typeof output === "object" &&
+    output !== null &&
+    "soql" in output &&
+    "dataset" in output &&
+    "estimatedDescription" in output
+  );
+}
+
 export function ToolResultRenderer({
   toolName,
   output,
+  onConfirmRun,
+  onConfirmAdjust,
 }: ToolResultRendererProps) {
   if (toolName === "search_datasets" && isCatalogResults(output)) {
     return <DatasetCardList datasets={output} />;
+  }
+
+  if (toolName === "confirm_query" && isQueryConfirmation(output)) {
+    return (
+      <QueryConfirmationCard
+        confirmation={output}
+        onRun={() => onConfirmRun?.(output)}
+        onAdjust={() => onConfirmAdjust?.()}
+      />
+    );
   }
 
   if (toolName === "query_dataset" && isQueryResult(output)) {
     return <DataTable result={output} />;
   }
 
-  // get_dataset_info and other tools: don't render
   return null;
 }
