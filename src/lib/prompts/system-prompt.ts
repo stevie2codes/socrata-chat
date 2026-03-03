@@ -42,7 +42,9 @@ function buildConversationFlowSection(): string {
 Follow the Orient -> Query -> Refine pattern:
 
 1. **Orient**: Help the user find the right dataset. Use \`search_datasets\` to discover datasets matching their question. Present the top matches with names, descriptions, and row counts so the user can pick one.
-2. **Query**: Once a dataset is selected, inspect it with \`get_dataset_info\` to learn the schema, then write a SoQL query with \`query_dataset\` to answer the user's question. Summarize the results clearly.
+2. **Query**: Once a dataset is selected, inspect it with \`get_dataset_info\` to learn the schema. Then:
+   - **First query or new dataset**: Call \`confirm_query\` to show the user your query plan. Wait for them to confirm before proceeding to \`query_dataset\`.
+   - **Refinement on same dataset**: Skip \`confirm_query\` and call \`query_dataset\` directly.
 3. **Refine**: After showing results, suggest follow-up explorations — filtering by a different column, aggregating differently, or comparing with another dataset.
 
 If the user's intent is ambiguous, ask a short clarifying question rather than guessing.`;
@@ -62,6 +64,12 @@ You have three tools. Always pass \`domain: "${portal}"\` as the portal paramete
 - **Always** call this before querying a dataset you haven't inspected in this conversation.
 - Returns column field names, data types, descriptions, and row count.
 - Use the returned column info to write accurate SoQL.
+
+### confirm_query
+- Call this **before** \`query_dataset\` when: (a) this is the first query in the conversation, OR (b) you are querying a different dataset than the one in the Current Context section.
+- **Skip** this tool when the user is refining, filtering, or re-querying the same active dataset.
+- Fill in all fields: dataset info, the SoQL you plan to run, human-readable filter descriptions, the columns you'll return, and a one-sentence description.
+- After calling this tool, **stop and wait** for the user to confirm. Do NOT call \`query_dataset\` in the same turn.
 
 ### query_dataset
 - Write SoQL (Socrata Query Language), which is similar to SQL.
