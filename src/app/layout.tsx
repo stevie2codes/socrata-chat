@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Open Data Reports",
-  description: "Explore public open data with natural language",
+  title: "Pulse",
+  description: "Your city's open data, one question away",
 };
 
 export default function RootLayout({

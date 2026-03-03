@@ -3,6 +3,7 @@
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport, type UIMessage, isToolUIPart, getToolName } from "ai";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { SquarePen, PanelRight } from "lucide-react";
 import { ChatMessageList } from "@/components/chat/chat-message-list";
 import { ChatInput } from "@/components/chat/chat-input";
 import { StarterPrompts } from "@/components/chat/starter-prompts";
@@ -37,7 +38,7 @@ export default function Home() {
     });
   }
 
-  const { messages, sendMessage, status } = useChat({
+  const { messages, setMessages, sendMessage, status } = useChat({
     transport: transportRef.current,
   });
 
@@ -87,6 +88,12 @@ export default function Home() {
     [sendMessage]
   );
 
+  const handleNewChat = useCallback(() => {
+    setMessages([]);
+    dispatch({ type: "RESET" });
+    setSidebarOpen(false);
+  }, [setMessages, dispatch]);
+
   useEffect(() => {
     const shortcuts = new Map<string, () => void>();
     shortcuts.set("focus-input", () => inputRef.current?.focus());
@@ -131,12 +138,17 @@ export default function Home() {
           style={{ animation: "fade-in-up 0.8s ease-out both" }}
         >
           {/* Hero title */}
-          <div className="flex flex-col items-center gap-3 text-center">
-            <h1 className="text-[2rem] font-semibold tracking-tight text-foreground/95">
-              Open Data Reports
+          <div className="relative flex flex-col items-center gap-4 text-center">
+            {/* Breathing glow */}
+            <div
+              className="hero-glow absolute -top-12 left-0 right-0 mx-auto h-48 w-64 rounded-full"
+              aria-hidden="true"
+            />
+            <h1 className="relative bg-gradient-to-b from-foreground to-foreground/60 bg-clip-text text-[2.5rem] font-bold tracking-tight text-transparent">
+              Pulse
             </h1>
-            <p className="max-w-md text-sm font-light tracking-wide text-muted-foreground">
-              Explore millions of public records with natural language
+            <p className="max-w-sm text-[15px] font-light leading-relaxed text-muted-foreground">
+              Your city&apos;s open data, one question away
             </p>
           </div>
 
@@ -169,27 +181,55 @@ export default function Home() {
 
   return (
     <div className="relative z-10 flex h-dvh flex-col">
-      {/* Glass header */}
-      <header className="glass-subtle flex shrink-0 items-center justify-between border-b border-white/[0.08] px-5 py-3">
-        <h1 className="text-sm font-semibold tracking-tight text-foreground/90">
-          Open Data Reports
-        </h1>
-        <span className="glass-pill rounded-full px-3 py-1 text-xs font-medium text-muted-foreground">
-          {portal.label}
-        </span>
+      {/* Sticky header */}
+      <header className="glass-subtle sticky top-0 z-20 flex shrink-0 items-center justify-between border-b border-white/[0.08] px-4 py-3">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleNewChat}
+            aria-label="New chat"
+            className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground"
+          >
+            <SquarePen className="size-4" />
+          </button>
+          <h1 className="text-sm font-semibold tracking-tight text-foreground/90">
+            Pulse
+          </h1>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="glass-pill rounded-full px-3 py-1 text-xs font-medium text-muted-foreground">
+            {portal.label}
+          </span>
+          <button
+            onClick={() => setSidebarOpen((prev) => !prev)}
+            aria-label="Toggle context panel"
+            className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground"
+          >
+            <PanelRight className="size-4" />
+          </button>
+        </div>
       </header>
 
       <main
         id="main-content"
         role="main"
-        className="flex min-h-0 flex-1 transition-[padding] duration-200"
+        className="flex min-h-0 flex-1 flex-col transition-[padding] duration-200"
         style={{ paddingRight: sidebarOpen ? 280 : 0 }}
       >
-        <div className="mx-auto flex w-full max-w-[720px] flex-1 flex-col">
+        <div className="mx-auto flex w-full min-h-0 max-w-[720px] flex-1 flex-col pb-32">
           <ChatMessageList messages={messages} isLoading={isLoading} onSuggestionSelect={handleSuggestionSelect} />
+        </div>
+      </main>
 
-          {/* Glass bottom input bar */}
-          <div className="glass mx-auto w-full max-w-[720px] border-t-0 px-4 py-3">
+      {/* Floating bottom dock */}
+      <div
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-20"
+        style={{ paddingRight: sidebarOpen ? 280 : 0 }}
+      >
+        {/* Fade-out gradient — content dissolves into the dock */}
+        <div className="h-10 bg-gradient-to-b from-transparent to-background/80" />
+        {/* Dock surface */}
+        <div className="bg-background/80 pb-[env(safe-area-inset-bottom)]">
+          <div className="pointer-events-auto mx-auto w-full max-w-[720px] px-4 pb-4 pt-1">
             <ChatInput
               input={input}
               onInputChange={setInput}
@@ -202,7 +242,7 @@ export default function Home() {
             />
           </div>
         </div>
-      </main>
+      </div>
 
       <ContextSidebar
         open={sidebarOpen}
