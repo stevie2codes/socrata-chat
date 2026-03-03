@@ -14,6 +14,7 @@ import { downloadCsv } from "@/lib/utils/csv-export";
 import { PORTALS, DEFAULT_PORTAL, findPortal } from "@/lib/portals";
 import { useSession, useSessionDispatch } from "@/lib/session/session-context";
 import { useSessionSync } from "@/lib/session/use-session-sync";
+import type { QueryConfirmation } from "@/types";
 
 export default function Home() {
   const [input, setInput] = useState("");
@@ -87,6 +88,47 @@ export default function Home() {
     },
     [sendMessage]
   );
+
+  const handleConfirmRun = useCallback(
+    (confirmation: QueryConfirmation) => {
+      const filtersChanged =
+        JSON.stringify(confirmation.filters) !==
+        JSON.stringify(
+          (messagesRef.current
+            .flatMap((m) => m.parts)
+            .find(
+              (p) =>
+                isToolUIPart(p) &&
+                getToolName(p) === "confirm_query" &&
+                p.state === "output-available"
+            ) as Record<string, unknown> | undefined)?.output &&
+            (
+              (messagesRef.current
+                .flatMap((m) => m.parts)
+                .find(
+                  (p) =>
+                    isToolUIPart(p) &&
+                    getToolName(p) === "confirm_query" &&
+                    p.state === "output-available"
+                ) as Record<string, unknown>)?.output as QueryConfirmation
+            )?.filters
+        );
+
+      if (filtersChanged) {
+        sendMessage({
+          text: `Run the query with these filters: ${confirmation.filters.filter(Boolean).join(", ")}`,
+        });
+      } else {
+        sendMessage({ text: "Go ahead, run it" });
+      }
+    },
+    [sendMessage]
+  );
+
+  const handleConfirmAdjust = useCallback(() => {
+    setInput("Actually, I'd like to change ");
+    setTimeout(() => inputRef.current?.focus(), 0);
+  }, []);
 
   const handleNewChat = useCallback(() => {
     setMessages([]);
@@ -211,7 +253,13 @@ export default function Home() {
         style={{ paddingRight: sidebarOpen ? 280 : 0 }}
       >
         <div className="mx-auto flex w-full min-h-0 max-w-[720px] flex-1 flex-col pb-32">
-          <ChatMessageList messages={messages} isLoading={isLoading} onSuggestionSelect={handleSuggestionSelect} />
+          <ChatMessageList
+            messages={messages}
+            isLoading={isLoading}
+            onSuggestionSelect={handleSuggestionSelect}
+            onConfirmRun={handleConfirmRun}
+            onConfirmAdjust={handleConfirmAdjust}
+          />
         </div>
       </main>
 

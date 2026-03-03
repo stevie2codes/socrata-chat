@@ -22,6 +22,7 @@ interface ChatMessageProps {
 const TOOL_LABELS: Record<string, string> = {
   search_datasets: "Searching datasets",
   get_dataset_info: "Reading dataset schema",
+  confirm_query: "Preparing query plan",
   query_dataset: "Querying data",
 };
 
