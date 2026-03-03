@@ -139,7 +139,7 @@ export default function Home() {
         <h1 className="text-sm font-semibold tracking-tight text-foreground/90">
           Open Data Reports
         </h1>
-        <span className="rounded-full bg-white/[0.08] border border-white/[0.1] px-3 py-1 text-xs font-medium text-muted-foreground">
+        <span className="glass-pill rounded-full px-3 py-1 text-xs font-medium text-muted-foreground">
           {portal.label}
         </span>
       </header>

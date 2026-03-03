@@ -171,6 +171,22 @@
   box-shadow: 0 1px 8px oklch(0 0 0 / 0.2);
 }
 
+.glass-pill {
+  background: oklch(1 0 0 / 0.07);
+  border: 1px solid oklch(1 0 0 / 0.12);
+  transition: all 0.2s;
+}
+
+.glass-pill:hover {
+  background: oklch(1 0 0 / 0.14);
+  border-color: oklch(1 0 0 / 0.2);
+}
+
+.glass-pill:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 1px oklch(0.68 0.16 250 / 0.4);
+}
+
 /* ═══════════════════════════════════════════════════════════
    Ambient background — visionOS spatial orbs
    ═══════════════════════════════════════════════════════════ */
