@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pulse
+
+An AI-powered chat interface for exploring open government data. Ask questions in plain English and get answers from real Socrata open data portals — complete with tables, charts, and CSV exports.
+
+Built with Next.js, Vercel AI SDK, and Claude.
+
+![Pulse hero view](public/screenshot.png)
+
+## Features
+
+- **Natural language queries** — ask about city data the way you'd ask a coworker
+- **Multi-portal support** — switch between Chicago, NYC, San Francisco, Seattle, Boston, Austin, LA County, and New York State
+- **Live data** — searches, inspects, and queries Socrata datasets in real time via SoQL
+- **Rich results** — data tables, bar charts (Recharts), and one-click CSV export
+- **Context sidebar** — shows the active dataset, columns, and applied filters
+- **Suggestion chips** — contextual follow-up prompts after each response
+- **Glass morphism UI** — dark-themed interface with animated glow effects
+
+## Tech Stack
+
+| Layer | Tech |
+|-------|------|
+| Framework | Next.js 16 (App Router) |
+| AI | Vercel AI SDK v6 + Claude Sonnet 4 |
+| Styling | Tailwind CSS v4 + shadcn/ui + Radix |
+| Charts | Recharts |
+| Data | Socrata Open Data API (SODA) |
+| Language | TypeScript, React 19 |
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment Variables
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Create a `.env.local` file:
 
-## Learn More
+```
+ANTHROPIC_API_KEY=your-api-key
+```
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+├── app/
+│   ├── api/chat/route.ts        # AI streaming endpoint
+│   ├── page.tsx                  # Main page (hero + chat)
+│   └── layout.tsx
+├── components/
+│   ├── chat/                     # Chat input, messages, suggestions
+│   ├── data/                     # Tables, charts, dataset cards
+│   ├── sidebar/                  # Context sidebar
+│   └── ui/                       # shadcn/ui primitives
+├── lib/
+│   ├── socrata/                  # API client, tools, MCP client
+│   ├── prompts/                  # System prompt builder
+│   ├── session/                  # Session state (context, provider)
+│   └── utils/                    # Chart helpers, CSV export
+└── types/
+    └── index.ts
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## How It Works
 
-## Deploy on Vercel
+1. User asks a question and selects a Socrata portal
+2. The chat route streams the query to Claude with Socrata tool definitions
+3. Claude decides which tools to call — `search_datasets`, `get_dataset_info`, or `query_dataset`
+4. Tool results flow back through the AI SDK stream and render as rich UI components
+5. The context sidebar updates with the active dataset and filters
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
