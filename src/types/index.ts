@@ -18,10 +18,16 @@ export interface DatasetColumn {
 }
 
 export interface QueryConfirmation {
-  dataset: SocrataDataset;
+  dataset: {
+    name: string;
+    id: string;
+    domain: string;
+    rowCount: number;
+  };
   soql: string;
-  filters: QueryFilter[];
-  estimatedRows?: number;
+  filters: string[];
+  columns: string[];
+  estimatedDescription: string;
 }
 
 export interface QueryFilter {
