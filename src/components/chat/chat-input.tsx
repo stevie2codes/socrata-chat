@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { ArrowUp } from "lucide-react";
 import { PortalSelector } from "@/components/chat/portal-selector";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,32 @@ interface ChatInputProps {
   variant?: "hero" | "default";
 }
 
+const ROTATING_HINTS = [
+  "How many building permits were issued this year?",
+  "Show me crime trends by neighborhood",
+  "What restaurants failed health inspections?",
+  "Compare 311 complaints across districts",
+  "What are the top causes of service requests?",
+];
+
+function useRotatingText(texts: string[], intervalMs = 4000) {
+  const [index, setIndex] = useState(0);
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setVisible(false);
+      setTimeout(() => {
+        setIndex((i) => (i + 1) % texts.length);
+        setVisible(true);
+      }, 300);
+    }, intervalMs);
+    return () => clearInterval(timer);
+  }, [texts.length, intervalMs]);
+
+  return { text: texts[index], visible };
+}
+
 export function ChatInput({
   input,
   onInputChange,
@@ -30,7 +56,9 @@ export function ChatInput({
   variant = "default",
 }: ChatInputProps) {
   const isHero = variant === "hero";
-  const maxTextareaHeight = isHero ? 280 : 150;
+  const maxTextareaHeight = isHero ? 180 : 150;
+  const [focused, setFocused] = useState(false);
+  const { text: hint, visible: hintVisible } = useRotatingText(ROTATING_HINTS);
 
   useEffect(() => {
     const textarea = textareaRef.current;
@@ -39,16 +67,20 @@ export function ChatInput({
     textarea.style.height = `${Math.min(textarea.scrollHeight, maxTextareaHeight)}px`;
   }, [input, textareaRef, maxTextareaHeight]);
 
-  const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      if (!isLoading && input.trim()) {
-        onSubmit(e as unknown as React.FormEvent);
+  const onKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        if (!isLoading && input.trim()) {
+          onSubmit(e as unknown as React.FormEvent);
+        }
       }
-    }
-  };
+    },
+    [input, isLoading, onSubmit]
+  );
 
   const hasInput = input.trim().length > 0;
+  const showRotatingHint = isHero && !hasInput && !focused;
 
   return (
     <form onSubmit={onSubmit} aria-busy={isLoading}>
@@ -61,21 +93,37 @@ export function ChatInput({
         )}
       >
         {/* Textarea */}
-        <div className={cn("px-3", isHero ? "pt-4 pb-2" : "pt-2 pb-0.5")}>
+        <div className={cn("relative", isHero ? "px-4 pt-3 pb-1" : "px-3 pt-2 pb-0.5")}>
+          {/* Rotating placeholder overlay for hero */}
+          {showRotatingHint && (
+            <div
+              className={cn(
+                "pointer-events-none absolute inset-0 flex items-start px-4 pt-3",
+                "text-[15px] font-light text-muted-foreground/60",
+                "transition-opacity duration-300",
+                hintVisible ? "opacity-100" : "opacity-0"
+              )}
+              aria-hidden="true"
+            >
+              {hint}
+            </div>
+          )}
           <textarea
             ref={textareaRef}
             value={input}
             onChange={(e) => onInputChange(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
             onKeyDown={onKeyDown}
             readOnly={isLoading}
             aria-label="Message input"
-            placeholder={`Ask about ${portal.label} data...`}
-            rows={isHero ? 3 : 1}
+            placeholder={isHero ? undefined : `Ask about ${portal.label} data...`}
+            rows={isHero ? 2 : 1}
             className={cn(
-              "w-full flex-1 resize-none bg-transparent outline-none",
+              "relative z-[1] w-full flex-1 resize-none bg-transparent outline-none",
               "placeholder:text-muted-foreground/40",
               isHero
-                ? "min-h-[100px] text-[15px] font-light leading-relaxed"
+                ? "min-h-[56px] text-[15px] font-light leading-relaxed"
                 : "min-h-[36px] text-[13px] leading-snug",
               isLoading && "cursor-not-allowed opacity-60"
             )}
@@ -85,7 +133,7 @@ export function ChatInput({
         {/* Bottom bar: portal selector + send */}
         <div className={cn(
           "flex items-center justify-between px-2",
-          isHero ? "py-2.5 border-t border-white/[0.1]" : "py-1.5"
+          isHero ? "px-3 py-2 border-t border-white/[0.06]" : "py-1.5"
         )}>
           <PortalSelector
             portal={portal}
@@ -98,13 +146,14 @@ export function ChatInput({
             disabled={isLoading || !hasInput}
             aria-label="Send message"
             className={cn(
-              "flex size-7 items-center justify-center rounded-lg transition-all duration-200",
+              "flex items-center justify-center rounded-lg transition-all duration-200",
+              isHero ? "size-8" : "size-7",
               hasInput && !isLoading
                 ? "bg-primary text-primary-foreground shadow-[0_0_20px_oklch(0.68_0.16_250_/_0.4)] hover:shadow-[0_0_28px_oklch(0.68_0.16_250_/_0.55)] hover:scale-105 active:scale-95"
                 : "bg-white/[0.06] text-muted-foreground/40"
             )}
           >
-            <ArrowUp className="size-3.5" strokeWidth={2.5} />
+            <ArrowUp className={cn(isHero ? "size-4" : "size-3.5")} strokeWidth={2.5} />
           </button>
         </div>
       </div>

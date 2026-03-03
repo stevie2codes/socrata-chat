@@ -139,12 +139,7 @@ export default function Home() {
         >
           {/* Hero title */}
           <div className="relative flex flex-col items-center gap-4 text-center">
-            {/* Breathing glow */}
-            <div
-              className="hero-glow absolute -top-12 left-0 right-0 mx-auto h-48 w-64 rounded-full"
-              aria-hidden="true"
-            />
-            <h1 className="relative bg-gradient-to-b from-foreground to-foreground/60 bg-clip-text text-[2.5rem] font-bold tracking-tight text-transparent">
+            <h1 className="bg-gradient-to-b from-foreground to-foreground/60 bg-clip-text text-[2.5rem] font-bold tracking-tight text-transparent">
               Pulse
             </h1>
             <p className="max-w-sm text-[15px] font-light leading-relaxed text-muted-foreground">
@@ -153,7 +148,7 @@ export default function Home() {
           </div>
 
           {/* Glass chat panel — the hero centerpiece */}
-          <div className="glass-strong w-full rounded-3xl p-1.5 shadow-[0_0_80px_oklch(0.55_0.14_250_/_0.12)]">
+          <div className="hero-input-panel glass-strong w-full rounded-3xl p-1.5">
             <ChatInput
               input={input}
               onInputChange={setInput}

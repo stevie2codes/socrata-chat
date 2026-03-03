@@ -285,6 +285,24 @@
   animation: pulse-glow 4s ease-in-out infinite;
 }
 
+.hero-input-panel {
+  box-shadow:
+    0 0 80px oklch(0.55 0.14 250 / 0.12),
+    0 0 0px oklch(0.55 0.14 250 / 0),
+    0 0 0 0.5px oklch(1 0 0 / 0.1) inset,
+    0 8px 40px oklch(0 0 0 / 0.5);
+  transition: box-shadow 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hero-input-panel:focus-within {
+  box-shadow:
+    0 0 60px oklch(0.60 0.18 250 / 0.3),
+    0 0 120px oklch(0.55 0.14 250 / 0.15),
+    0 0 0 0.5px oklch(1 0 0 / 0.1) inset,
+    0 8px 40px oklch(0 0 0 / 0.5);
+}
+
+
 @keyframes fade-in-up {
   from {
     opacity: 0;
