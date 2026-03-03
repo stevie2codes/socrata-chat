@@ -154,6 +154,38 @@ const query_dataset = tool({
   },
 });
 
+const confirm_query = tool({
+  description:
+    "Present a query plan to the user for confirmation before executing. " +
+    "Call this BEFORE query_dataset when this is the first query in the conversation " +
+    "or when switching to a different dataset. Skip this tool for follow-up " +
+    "refinements on the same dataset. The tool returns the plan for the UI to render " +
+    "as an interactive confirmation card.",
+  inputSchema: z.object({
+    dataset: z.object({
+      name: z.string().describe("Human-readable dataset name"),
+      id: z.string().describe("Socrata 4x4 dataset ID"),
+      domain: z.string().describe("Portal hostname"),
+      rowCount: z.number().describe("Total rows in the dataset"),
+    }),
+    soql: z
+      .string()
+      .describe("The SoQL query you intend to execute"),
+    filters: z
+      .array(z.string())
+      .describe(
+        'Human-readable filter descriptions, e.g. ["results = \'Fail\'", "date >= \'2025-01-01\'"]'
+      ),
+    columns: z
+      .array(z.string())
+      .describe("Column names that will be returned by the query"),
+    estimatedDescription: z
+      .string()
+      .describe("One-sentence plain-English summary of what this query does"),
+  }),
+  execute: async (input) => input,
+});
+
 // ---------------------------------------------------------------------------
 // Export
 // ---------------------------------------------------------------------------
@@ -162,5 +194,6 @@ const query_dataset = tool({
 export const socrataTools = {
   search_datasets,
   get_dataset_info,
+  confirm_query,
   query_dataset,
 } as const;
