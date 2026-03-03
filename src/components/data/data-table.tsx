@@ -1,7 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { Download } from "lucide-react";
 import type { QueryResult } from "@/lib/socrata/api-client";
+import { downloadCsv } from "@/lib/utils/csv-export";
+import { isChartable, detectChartConfig } from "@/lib/utils/chart-utils";
+import { BarChartView } from "@/components/data/bar-chart-view";
 import {
   Table,
   TableHeader,
@@ -21,15 +25,26 @@ function formatCellValue(value: unknown): string {
   return String(value);
 }
 
+type ViewMode = "table" | "chart";
+
 export function DataTable({ result }: DataTableProps) {
   const { data, totalRows, executionTimeMs } = result;
   const defaultOpen = totalRows <= 10;
   const [open, setOpen] = useState(defaultOpen);
+  const [view, setView] = useState<ViewMode>("table");
+
+  const chartConfig = useMemo(
+    () => (isChartable(data) ? detectChartConfig(data) : null),
+    [data]
+  );
 
   if (data.length === 0) {
     return (
-      <div className="py-3 text-xs text-muted-foreground">
-        No data returned.
+      <div className="my-3 rounded-lg border-l-2 border-muted-foreground/30 px-3 py-3">
+        <p className="text-xs text-muted-foreground">
+          No data returned. The query may have matched zero rows — try broadening
+          your filters or checking column names.
+        </p>
       </div>
     );
   }
@@ -46,6 +61,48 @@ export function DataTable({ result }: DataTableProps) {
         <span className="text-xs text-muted-foreground">
           {totalRows.toLocaleString()} {totalRows === 1 ? "row" : "rows"} &middot; {executionTimeMs}ms
         </span>
+
+        {/* View switcher — only when chartable */}
+        {chartConfig && (
+          <div role="tablist" className="flex gap-0.5 rounded-md glass-pill p-0.5">
+            <button
+              role="tab"
+              type="button"
+              aria-selected={view === "table"}
+              onClick={() => setView("table")}
+              className={`rounded px-2 py-0.5 text-[10px] font-medium transition-colors ${
+                view === "table"
+                  ? "bg-white/10 text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Table
+            </button>
+            <button
+              role="tab"
+              type="button"
+              aria-selected={view === "chart"}
+              onClick={() => { setView("chart"); setOpen(true); }}
+              className={`rounded px-2 py-0.5 text-[10px] font-medium transition-colors ${
+                view === "chart"
+                  ? "bg-white/10 text-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Bar Chart
+            </button>
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => downloadCsv(data)}
+          className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+          aria-label="Export CSV"
+        >
+          <Download className="size-3" />
+          Export CSV
+        </button>
       </div>
 
       {/* Toggle button */}
@@ -66,8 +123,12 @@ export function DataTable({ result }: DataTableProps) {
         {open ? "Hide data" : "Show data"}
       </button>
 
-      {/* Table content */}
-      {open && (
+      {/* Content */}
+      {open && view === "chart" && chartConfig ? (
+        <div className="px-1 pb-3">
+          <BarChartView data={data} config={chartConfig} />
+        </div>
+      ) : open ? (
         <div className="overflow-x-auto px-1 pb-3">
           <Table>
             <TableHeader className="glass-subtle">
@@ -96,6 +157,13 @@ export function DataTable({ result }: DataTableProps) {
             </TableBody>
           </Table>
         </div>
+      ) : null}
+
+      {/* Row limit note */}
+      {data.length >= 100 && (
+        <p className="px-3 pb-2 text-[10px] text-muted-foreground">
+          Showing first {data.length.toLocaleString()} rows. Try adding aggregations (GROUP BY, COUNT) to summarize larger datasets.
+        </p>
       )}
     </div>
   );

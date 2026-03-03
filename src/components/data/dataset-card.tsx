@@ -8,6 +8,10 @@ interface DatasetCardProps {
   dataset: CatalogResult;
 }
 
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, "");
+}
+
 function formatNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
   if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`;
@@ -31,7 +35,7 @@ export function DatasetCard({ dataset }: DatasetCardProps) {
 
           {dataset.description && (
             <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
-              {dataset.description}
+              {stripHtml(dataset.description)}
             </p>
           )}
 

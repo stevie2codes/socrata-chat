@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { parseSuggestions, getHeuristicSuggestions } from "@/lib/suggestions";
 import { MarkdownContent } from "@/components/chat/markdown-content";
 import { ToolResultRenderer } from "@/components/chat/tool-result-renderer";
+import { ErrorCallout } from "@/components/data/error-callout";
 import { SuggestionChips } from "@/components/chat/suggestion-chips";
 
 interface ChatMessageProps {
@@ -119,6 +120,25 @@ export function ChatMessage({ message, isStreaming = false, isLast = false, onSu
               output={(part as Record<string, unknown>).output}
             />
           ))}
+
+        {/* Render tool errors */}
+        {message.parts
+          .filter(
+            (part): part is Extract<typeof part, { state: string }> =>
+              isToolUIPart(part) && part.state === "output-error"
+          )
+          .map((part, i) => {
+            const err = (part as Record<string, unknown>).output;
+            const message =
+              err && typeof err === "object" && "message" in err
+                ? String((err as { message: string }).message)
+                : "Something went wrong while running this tool.";
+            const code =
+              err && typeof err === "object" && "errorCode" in err
+                ? String((err as { errorCode: string }).errorCode)
+                : undefined;
+            return <ErrorCallout key={`err-${i}`} message={message} errorCode={code} />;
+          })}
 
         {suggestions.length > 0 && onSuggestionSelect && (
           <SuggestionChips suggestions={suggestions} onSelect={onSuggestionSelect} />

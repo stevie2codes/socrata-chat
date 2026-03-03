@@ -1,15 +1,18 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, type UIMessage } from "ai";
+import { DefaultChatTransport, type UIMessage, isToolUIPart, getToolName } from "ai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChatMessageList } from "@/components/chat/chat-message-list";
 import { ChatInput } from "@/components/chat/chat-input";
 import { StarterPrompts } from "@/components/chat/starter-prompts";
 import { KeyboardHelpDialog } from "@/components/chat/keyboard-help-dialog";
+import { ContextSidebar } from "@/components/sidebar/context-sidebar";
 import { createShortcutHandler } from "@/lib/keyboard-shortcuts";
+import { downloadCsv } from "@/lib/utils/csv-export";
 import { PORTALS, DEFAULT_PORTAL, findPortal } from "@/lib/portals";
-import { useSessionDispatch } from "@/lib/session/session-context";
+import { useSession, useSessionDispatch } from "@/lib/session/session-context";
+import { useSessionSync } from "@/lib/session/use-session-sync";
 
 export default function Home() {
   const [input, setInput] = useState("");
@@ -17,14 +20,19 @@ export default function Home() {
   const portalDomainRef = useRef(portalDomain);
   portalDomainRef.current = portalDomain;
 
+  const session = useSession();
+  const dispatch = useSessionDispatch();
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
+
   const transportRef = useRef<DefaultChatTransport<UIMessage> | null>(null);
   if (!transportRef.current) {
     transportRef.current = new DefaultChatTransport({
       api: "/api/chat",
       body: () => ({
         portal: portalDomainRef.current,
-        activeDataset: null,
-        filters: [],
+        activeDataset: sessionRef.current.activeDataset,
+        filters: sessionRef.current.filters,
       }),
     });
   }
@@ -32,9 +40,15 @@ export default function Home() {
   const { messages, sendMessage, status } = useChat({
     transport: transportRef.current,
   });
-  const dispatch = useSessionDispatch();
+
+  useSessionSync(messages, dispatch, portalDomain);
+
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
+
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const [showHelp, setShowHelp] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const portal = findPortal(portalDomain) ?? DEFAULT_PORTAL;
   const isLoading = status === "streaming" || status === "submitted";
@@ -78,6 +92,27 @@ export default function Home() {
     shortcuts.set("focus-input", () => inputRef.current?.focus());
     shortcuts.set("focus-input-alt", () => inputRef.current?.focus());
     shortcuts.set("show-help", () => setShowHelp(true));
+    shortcuts.set("toggle-sidebar", () => setSidebarOpen((prev) => !prev));
+    shortcuts.set("export-results", () => {
+      for (let i = messagesRef.current.length - 1; i >= 0; i--) {
+        const msg = messagesRef.current[i];
+        if (msg.role !== "assistant") continue;
+        for (const part of msg.parts) {
+          if (
+            isToolUIPart(part) &&
+            part.state === "output-available" &&
+            getToolName(part) === "query_dataset"
+          ) {
+            const output = (part as Record<string, unknown>).output;
+            if (output && typeof output === "object" && "data" in output) {
+              const data = (output as { data: Record<string, unknown>[] }).data;
+              if (data.length > 0) downloadCsv(data);
+            }
+            return;
+          }
+        }
+      }
+    });
     shortcuts.set("escape", () => {
       if (document.activeElement instanceof HTMLElement) {
         document.activeElement.blur();
@@ -144,7 +179,12 @@ export default function Home() {
         </span>
       </header>
 
-      <main id="main-content" role="main" className="flex min-h-0 flex-1">
+      <main
+        id="main-content"
+        role="main"
+        className="flex min-h-0 flex-1 transition-[padding] duration-200"
+        style={{ paddingRight: sidebarOpen ? 280 : 0 }}
+      >
         <div className="mx-auto flex w-full max-w-[720px] flex-1 flex-col">
           <ChatMessageList messages={messages} isLoading={isLoading} onSuggestionSelect={handleSuggestionSelect} />
 
@@ -163,6 +203,15 @@ export default function Home() {
           </div>
         </div>
       </main>
+
+      <ContextSidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        session={session}
+        onRemoveFilter={(index) =>
+          dispatch({ type: "REMOVE_FILTER", payload: index })
+        }
+      />
 
       <KeyboardHelpDialog open={showHelp} onOpenChange={setShowHelp} />
     </div>
