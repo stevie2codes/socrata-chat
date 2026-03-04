@@ -4,7 +4,18 @@ import { useState } from "react";
 import { Play, MessageSquare } from "lucide-react";
 import { FilterEditor } from "@/components/data/filter-editor";
 import { cn } from "@/lib/utils";
-import type { QueryConfirmation, QueryFilter } from "@/types";
+import type { QueryConfirmation, QueryFilter, DatasetColumn } from "@/types";
+
+/** Normalize filters from Claude — may arrive as string[] (old format) or QueryFilter[] (new). */
+function normalizeFilters(raw: unknown): QueryFilter[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map((f) => {
+    if (typeof f === "string") {
+      return { column: "", operator: "", value: "", label: f };
+    }
+    return f as QueryFilter;
+  });
+}
 
 interface QueryConfirmationCardProps {
   confirmation: QueryConfirmation;
@@ -18,11 +29,13 @@ export function QueryConfirmationCard({
   onAdjust,
 }: QueryConfirmationCardProps) {
   const [acted, setActed] = useState(false);
-  const [filters, setFilters] = useState<QueryFilter[]>(confirmation.filters);
+  const normalizedFilters = normalizeFilters(confirmation.filters);
+  const availableColumns: DatasetColumn[] = confirmation.availableColumns ?? [];
+  const [filters, setFilters] = useState<QueryFilter[]>(normalizedFilters);
 
   const handleRun = () => {
     setActed(true);
-    onRun({ original: confirmation.filters, current: filters });
+    onRun({ original: normalizedFilters, current: filters });
   };
 
   const handleAdjust = () => {
@@ -78,7 +91,7 @@ export function QueryConfirmationCard({
         <dd>
           <FilterEditor
             filters={filters}
-            availableColumns={confirmation.availableColumns}
+            availableColumns={availableColumns}
             onChange={setFilters}
           />
         </dd>
