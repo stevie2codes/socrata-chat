@@ -8,7 +8,7 @@ export function composeFilterMessage(
   original: QueryFilter[],
   current: QueryFilter[]
 ): string {
-  // No changes
+  // No changes — same length and same keys in order
   if (
     original.length === current.length &&
     original.every((f, i) => filterKey(f) === filterKey(current[i]))
@@ -21,28 +21,21 @@ export function composeFilterMessage(
     return "Remove all filters and run the query.";
   }
 
+  const origKeys = new Set(original.map(filterKey));
+  const currKeys = new Set(current.map(filterKey));
+
   const parts: string[] = [];
-  const origByCol = new Map(original.map((f) => [f.column, f]));
-  const currByCol = new Map(current.map((f) => [f.column, f]));
 
-  // Changed filters (same column, different operator/value)
-  for (const [col, curr] of currByCol) {
-    const orig = origByCol.get(col);
-    if (orig && filterKey(orig) !== filterKey(curr)) {
-      parts.push(`Change ${col} filter to ${curr.label}`);
-    }
-  }
-
-  // Added filters (column not in original)
+  // Added filters (in current but not in original)
   for (const f of current) {
-    if (!origByCol.has(f.column)) {
+    if (!origKeys.has(filterKey(f))) {
       parts.push(`Add filter: ${f.label}`);
     }
   }
 
-  // Removed filters (column not in current)
+  // Removed filters (in original but not in current)
   for (const f of original) {
-    if (!currByCol.has(f.column)) {
+    if (!currKeys.has(filterKey(f))) {
       parts.push(`Remove filter: ${f.label}`);
     }
   }

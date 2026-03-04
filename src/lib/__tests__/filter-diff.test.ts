@@ -29,18 +29,37 @@ describe("composeFilterMessage", () => {
     expect(msg).toContain("Remove");
   });
 
-  it("describes changed values", () => {
+  it("describes changed values as remove + add", () => {
     const current = [
       { ...base[0], value: "Pass", label: "results = 'Pass'" },
       base[1],
     ];
     const msg = composeFilterMessage(base, current);
     expect(msg).toContain("results = 'Pass'");
-    expect(msg).toContain("Change");
+    expect(msg).toContain("Add");
+    expect(msg).toContain("Remove");
   });
 
   it("handles all filters removed", () => {
     const msg = composeFilterMessage(base, []);
     expect(msg).toContain("Remove all filters");
+  });
+
+  it("handles duplicate-column filters (date range)", () => {
+    const rangeOriginal: QueryFilter[] = [
+      { column: "date", operator: ">=", value: "2025-01-01", label: "date >= '2025-01-01'" },
+      { column: "date", operator: "<=", value: "2025-12-31", label: "date <= '2025-12-31'" },
+    ];
+    // No changes
+    expect(composeFilterMessage(rangeOriginal, [...rangeOriginal])).toBe("Go ahead, run it");
+
+    // Change one bound
+    const updated = [
+      rangeOriginal[0],
+      { column: "date", operator: "<=", value: "2025-06-30", label: "date <= '2025-06-30'" },
+    ];
+    const msg = composeFilterMessage(rangeOriginal, updated);
+    expect(msg).toContain("date <= '2025-06-30'");
+    expect(msg).toContain("date <= '2025-12-31'");
   });
 });

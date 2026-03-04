@@ -55,6 +55,8 @@ export function FilterEditor({
   const handleRemoveFilter = (index: number) => {
     const next = filters.filter((_, i) => i !== index);
     onChange(next);
+    if (editingIndex === index) setEditingIndex(null);
+    else if (editingIndex !== null && index < editingIndex) setEditingIndex(editingIndex - 1);
   };
 
   const handleAddFilter = () => {
@@ -85,7 +87,7 @@ export function FilterEditor({
   const handleColumnChange = (index: number, fieldName: string) => {
     const col = availableColumns.find((c) => c.fieldName === fieldName);
     const operators = col ? getOperatorsForType(col.dataType) : [];
-    const defaultOperator = operators.length > 0 ? operators[0].label : "";
+    const defaultOperator = operators.length > 0 ? operators[0].value : "";
     handleUpdateFilter(index, {
       column: fieldName,
       operator: defaultOperator,
@@ -93,7 +95,7 @@ export function FilterEditor({
     });
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       setEditingIndex(null);
     }
@@ -150,7 +152,7 @@ export function FilterEditor({
                 </SelectTrigger>
                 <SelectContent>
                   {operators.map((op) => (
-                    <SelectItem key={op.value} value={op.label}>
+                    <SelectItem key={op.value} value={op.value}>
                       {op.label}
                     </SelectItem>
                   ))}
@@ -163,7 +165,7 @@ export function FilterEditor({
                 onChange={(e) =>
                   handleUpdateFilter(index, { value: e.target.value })
                 }
-                onKeyDown={(e) => handleKeyDown(e, index)}
+                onKeyDown={handleKeyDown}
                 placeholder="Value..."
                 aria-label="Filter value"
                 className="h-7 w-24 rounded-md border border-white/[0.1] bg-transparent px-2 text-xs text-foreground outline-none focus:border-primary/40"

@@ -26,7 +26,6 @@ export function QueryConfirmationCard({
   };
 
   const handleAdjust = () => {
-    setActed(true);
     onAdjust();
   };
 
