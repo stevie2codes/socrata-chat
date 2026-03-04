@@ -160,7 +160,9 @@ const confirm_query = tool({
     "Call this BEFORE query_dataset when this is the first query in the conversation " +
     "or when switching to a different dataset. Skip this tool for follow-up " +
     "refinements on the same dataset. The tool returns the plan for the UI to render " +
-    "as an interactive confirmation card.",
+    "as an interactive confirmation card. " +
+    "IMPORTANT: filters must be structured objects with column, operator, value, and label. " +
+    "availableColumns should include all columns from the dataset schema (from get_dataset_info).",
   inputSchema: z.object({
     dataset: z.object({
       name: z.string().describe("Human-readable dataset name"),
@@ -172,16 +174,31 @@ const confirm_query = tool({
       .string()
       .describe("The SoQL query you intend to execute"),
     filters: z
-      .array(z.string())
-      .describe(
-        'Human-readable filter descriptions, e.g. ["results = \'Fail\'", "date >= \'2025-01-01\'"]'
-      ),
+      .array(
+        z.object({
+          column: z.string().describe("fieldName from the dataset schema"),
+          operator: z.string().describe('SoQL operator: "=", "!=", ">", "<", ">=", "<=", or "LIKE"'),
+          value: z.string().describe("The literal filter value"),
+          label: z.string().describe('Human-readable label, e.g. "results = \'Fail\'"'),
+        })
+      )
+      .describe("Structured filters applied to this query"),
     columns: z
       .array(z.string())
       .describe("Column names that will be returned by the query"),
     estimatedDescription: z
       .string()
       .describe("One-sentence plain-English summary of what this query does"),
+    availableColumns: z
+      .array(
+        z.object({
+          fieldName: z.string().describe("API field name"),
+          name: z.string().describe("Human-readable column name"),
+          dataType: z.string().describe('Socrata data type: "text", "number", "calendar_date", etc.'),
+          description: z.string().optional().describe("Column description if available"),
+        })
+      )
+      .describe("All columns from the dataset schema, for the filter editor dropdowns"),
   }),
   execute: async (input) => input,
 });
