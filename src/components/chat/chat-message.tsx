@@ -8,14 +8,14 @@ import { MarkdownContent } from "@/components/chat/markdown-content";
 import { ToolResultRenderer } from "@/components/chat/tool-result-renderer";
 import { ErrorCallout } from "@/components/data/error-callout";
 import { SuggestionChips } from "@/components/chat/suggestion-chips";
-import type { QueryConfirmation } from "@/types";
+import type { QueryFilter } from "@/types";
 
 interface ChatMessageProps {
   message: UIMessage;
   isStreaming?: boolean;
   isLast?: boolean;
   onSuggestionSelect?: (suggestion: string) => void;
-  onConfirmRun?: (confirmation: QueryConfirmation) => void;
+  onConfirmRun?: (filters: { original: QueryFilter[]; current: QueryFilter[] }) => void;
   onConfirmAdjust?: () => void;
 }
 

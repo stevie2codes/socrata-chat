@@ -4,14 +4,14 @@ import { useCallback, useEffect, useRef, type ReactNode } from "react";
 import type { UIMessage } from "ai";
 import { ChatMessage } from "@/components/chat/chat-message";
 import { StreamingIndicator } from "@/components/chat/streaming-indicator";
-import type { QueryConfirmation } from "@/types";
+import type { QueryFilter } from "@/types";
 
 interface ChatMessageListProps {
   messages: UIMessage[];
   isLoading: boolean;
   children?: ReactNode;
   onSuggestionSelect?: (suggestion: string) => void;
-  onConfirmRun?: (confirmation: QueryConfirmation) => void;
+  onConfirmRun?: (filters: { original: QueryFilter[]; current: QueryFilter[] }) => void;
   onConfirmAdjust?: () => void;
 }
 

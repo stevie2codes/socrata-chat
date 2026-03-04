@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Play, MessageSquare, SlidersHorizontal, X, Plus } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Play, MessageSquare } from "lucide-react";
+import { FilterEditor } from "@/components/data/filter-editor";
 import { cn } from "@/lib/utils";
-import type { QueryConfirmation } from "@/types";
+import type { QueryConfirmation, QueryFilter } from "@/types";
 
 interface QueryConfirmationCardProps {
   confirmation: QueryConfirmation;
-  onRun: () => void;
+  onRun: (filters: { original: QueryFilter[]; current: QueryFilter[] }) => void;
   onAdjust: () => void;
 }
 
@@ -18,35 +18,16 @@ export function QueryConfirmationCard({
   onAdjust,
 }: QueryConfirmationCardProps) {
   const [acted, setActed] = useState(false);
-  const [editingFilters, setEditingFilters] = useState(false);
-  const [filters, setFilters] = useState<string[]>(confirmation.filters);
+  const [filters, setFilters] = useState<QueryFilter[]>(confirmation.filters);
 
   const handleRun = () => {
     setActed(true);
-    onRun();
+    onRun({ original: confirmation.filters, current: filters });
   };
 
   const handleAdjust = () => {
     setActed(true);
     onAdjust();
-  };
-
-  const handleApplyAndRun = () => {
-    setActed(true);
-    // onRun will send a message — the parent constructs it with the current filters
-    onRun();
-  };
-
-  const handleRemoveFilter = (index: number) => {
-    setFilters((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleAddFilter = () => {
-    setFilters((prev) => [...prev, ""]);
-  };
-
-  const handleFilterChange = (index: number, value: string) => {
-    setFilters((prev) => prev.map((f, i) => (i === index ? value : f)));
   };
 
   const formatRowCount = (n: number): string => {
@@ -94,18 +75,14 @@ export function QueryConfirmationCard({
           {formatRowCount(confirmation.dataset.rowCount)} total
         </dd>
 
-        {confirmation.filters.length > 0 && (
-          <>
-            <dt className="font-medium text-muted-foreground">Filters</dt>
-            <dd className="flex flex-wrap gap-1">
-              {confirmation.filters.map((f, i) => (
-                <Badge key={i} variant="secondary" className="text-[10px] font-mono font-normal">
-                  {f}
-                </Badge>
-              ))}
-            </dd>
-          </>
-        )}
+        <dt className="font-medium text-muted-foreground">Filters</dt>
+        <dd>
+          <FilterEditor
+            filters={filters}
+            availableColumns={confirmation.availableColumns}
+            onChange={setFilters}
+          />
+        </dd>
 
         {confirmation.columns.length > 0 && (
           <>
@@ -117,41 +94,10 @@ export function QueryConfirmationCard({
         )}
       </dl>
 
-      {/* Inline filter editor (expandable) */}
-      {editingFilters && (
-        <div className="mb-4 space-y-2 rounded-lg bg-white/[0.03] px-3 py-3">
-          {filters.map((f, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <input
-                type="text"
-                value={f}
-                onChange={(e) => handleFilterChange(i, e.target.value)}
-                className="flex-1 rounded-md border border-white/[0.1] bg-transparent px-2 py-1 text-xs text-foreground outline-none focus:border-primary/40"
-                placeholder="e.g. date >= '2025-01-01'"
-                aria-label={`Filter ${i + 1}`}
-              />
-              <button
-                onClick={() => handleRemoveFilter(i)}
-                className="rounded p-0.5 text-muted-foreground hover:text-foreground"
-                aria-label={`Remove filter ${i + 1}`}
-              >
-                <X className="size-3" />
-              </button>
-            </div>
-          ))}
-          <button
-            onClick={handleAddFilter}
-            className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
-          >
-            <Plus className="size-3" /> Add filter
-          </button>
-        </div>
-      )}
-
       {/* Actions */}
       <div className="flex items-center gap-2">
         <button
-          onClick={editingFilters ? handleApplyAndRun : handleRun}
+          onClick={handleRun}
           disabled={acted}
           className={cn(
             "flex items-center gap-1.5 rounded-lg px-3.5 py-1.5 text-xs font-medium transition-all",
@@ -163,7 +109,7 @@ export function QueryConfirmationCard({
           )}
         >
           <Play className="size-3" aria-hidden="true" />
-          {editingFilters ? "Apply & Run" : "Run this query"}
+          Run this query
         </button>
 
         <button
@@ -173,15 +119,6 @@ export function QueryConfirmationCard({
         >
           <MessageSquare className="size-3" aria-hidden="true" />
           Adjust
-        </button>
-
-        <button
-          onClick={() => setEditingFilters((prev) => !prev)}
-          disabled={acted}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-white/[0.06] hover:text-foreground disabled:opacity-40 disabled:pointer-events-none"
-        >
-          <SlidersHorizontal className="size-3" aria-hidden="true" />
-          Edit filters
         </button>
       </div>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import type { CatalogResult, QueryResult } from "@/lib/socrata/api-client";
-import type { QueryConfirmation } from "@/types";
+import type { QueryConfirmation, QueryFilter } from "@/types";
 import { DatasetCardList } from "@/components/data/dataset-card-list";
 import { DataTable } from "@/components/data/data-table";
 import { QueryConfirmationCard } from "@/components/data/query-confirmation-card";
@@ -9,7 +9,7 @@ import { QueryConfirmationCard } from "@/components/data/query-confirmation-card
 interface ToolResultRendererProps {
   toolName: string;
   output: unknown;
-  onConfirmRun?: (confirmation: QueryConfirmation) => void;
+  onConfirmRun?: (filters: { original: QueryFilter[]; current: QueryFilter[] }) => void;
   onConfirmAdjust?: () => void;
 }
 
@@ -56,7 +56,7 @@ export function ToolResultRenderer({
     return (
       <QueryConfirmationCard
         confirmation={output}
-        onRun={() => onConfirmRun?.(output)}
+        onRun={(filters) => onConfirmRun?.(filters)}
         onAdjust={() => onConfirmAdjust?.()}
       />
     );

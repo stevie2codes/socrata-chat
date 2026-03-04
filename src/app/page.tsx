@@ -14,7 +14,8 @@ import { downloadCsv } from "@/lib/utils/csv-export";
 import { PORTALS, DEFAULT_PORTAL, findPortal } from "@/lib/portals";
 import { useSession, useSessionDispatch } from "@/lib/session/session-context";
 import { useSessionSync } from "@/lib/session/use-session-sync";
-import type { QueryConfirmation } from "@/types";
+import { composeFilterMessage } from "@/lib/filter-diff";
+import type { QueryFilter } from "@/types";
 
 export default function Home() {
   const [input, setInput] = useState("");
@@ -90,37 +91,9 @@ export default function Home() {
   );
 
   const handleConfirmRun = useCallback(
-    (confirmation: QueryConfirmation) => {
-      const filtersChanged =
-        JSON.stringify(confirmation.filters) !==
-        JSON.stringify(
-          (messagesRef.current
-            .flatMap((m) => m.parts)
-            .find(
-              (p) =>
-                isToolUIPart(p) &&
-                getToolName(p) === "confirm_query" &&
-                p.state === "output-available"
-            ) as Record<string, unknown> | undefined)?.output &&
-            (
-              (messagesRef.current
-                .flatMap((m) => m.parts)
-                .find(
-                  (p) =>
-                    isToolUIPart(p) &&
-                    getToolName(p) === "confirm_query" &&
-                    p.state === "output-available"
-                ) as Record<string, unknown>)?.output as QueryConfirmation
-            )?.filters
-        );
-
-      if (filtersChanged) {
-        sendMessage({
-          text: `Run the query with these filters: ${confirmation.filters.filter(Boolean).join(", ")}`,
-        });
-      } else {
-        sendMessage({ text: "Go ahead, run it" });
-      }
+    (filters: { original: QueryFilter[]; current: QueryFilter[] }) => {
+      const message = composeFilterMessage(filters.original, filters.current);
+      sendMessage({ text: message });
     },
     [sendMessage]
   );
