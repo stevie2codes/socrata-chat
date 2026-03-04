@@ -25,9 +25,10 @@ export interface QueryConfirmation {
     rowCount: number;
   };
   soql: string;
-  filters: string[];
+  filters: QueryFilter[];
   columns: string[];
   estimatedDescription: string;
+  availableColumns: DatasetColumn[];
 }
 
 export interface QueryFilter {
