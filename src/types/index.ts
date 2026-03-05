@@ -17,6 +17,18 @@ export interface DatasetColumn {
   description?: string;
 }
 
+export interface ColumnMapping {
+  intent: string;
+  fieldName: string;
+  rationale: string;
+}
+
+export interface TechnicalNotes {
+  columnMappings: ColumnMapping[];
+  assumptions: string[];
+  exclusions: string[];
+}
+
 export interface QueryConfirmation {
   dataset: {
     name: string;
@@ -29,6 +41,8 @@ export interface QueryConfirmation {
   columns: string[];
   estimatedDescription: string;
   availableColumns: DatasetColumn[];
+  methodology?: string;
+  technicalNotes?: TechnicalNotes;
 }
 
 export interface QueryFilter {
