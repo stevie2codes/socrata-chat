@@ -162,7 +162,8 @@ const confirm_query = tool({
     "refinements on the same dataset. The tool returns the plan for the UI to render " +
     "as an interactive confirmation card. " +
     "IMPORTANT: filters must be structured objects with column, operator, value, and label. " +
-    "availableColumns should include all columns from the dataset schema (from get_dataset_info).",
+    "availableColumns should include all columns from the dataset schema (from get_dataset_info). " +
+    "Always include a methodology explaining your interpretation of the user's question.",
   inputSchema: z.object({
     dataset: z.object({
       name: z.string().describe("Human-readable dataset name"),
@@ -199,6 +200,37 @@ const confirm_query = tool({
         })
       )
       .describe("All columns from the dataset schema, for the filter editor dropdowns"),
+    methodology: z
+      .string()
+      .describe(
+        "1-2 sentence plain-English explanation of how you interpreted the user's question " +
+        "and what this query measures. Example: 'Counting rows where inspection result is Fail, " +
+        "grouped by month using the inspection_date column.'"
+      ),
+    technicalNotes: z
+      .object({
+        columnMappings: z
+          .array(
+            z.object({
+              intent: z.string().describe('What this column represents in the query, e.g. "inspection date"'),
+              fieldName: z.string().describe("The dataset fieldName used"),
+              rationale: z.string().describe("Why this column was chosen over alternatives"),
+            })
+          )
+          .describe("Key columns used and why they were selected"),
+        assumptions: z
+          .array(z.string())
+          .describe(
+            'Assumptions made about the query, e.g. "No date range specified — querying all available data"'
+          ),
+        exclusions: z
+          .array(z.string())
+          .describe(
+            'Data excluded by this query, e.g. "Rows with null results are excluded by the WHERE clause"'
+          ),
+      })
+      .optional()
+      .describe("Technical details for power users — column choices, assumptions, and exclusions"),
   }),
   execute: async (input) => input,
 });
