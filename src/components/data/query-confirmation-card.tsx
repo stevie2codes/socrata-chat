@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Play, MessageSquare, Code } from "lucide-react";
+import { Play, MessageSquare, Code, Info } from "lucide-react";
 import { FilterEditor } from "@/components/data/filter-editor";
 import { cn } from "@/lib/utils";
 import type { QueryConfirmation, QueryFilter, DatasetColumn } from "@/types";
@@ -30,6 +30,7 @@ export function QueryConfirmationCard({
 }: QueryConfirmationCardProps) {
   const [acted, setActed] = useState(false);
   const [showSoql, setShowSoql] = useState(false);
+  const [showTechnical, setShowTechnical] = useState(false);
   const normalizedFilters = normalizeFilters(confirmation.filters);
   const availableColumns: DatasetColumn[] = confirmation.availableColumns ?? [];
   const [filters, setFilters] = useState<QueryFilter[]>(normalizedFilters);
@@ -85,6 +86,76 @@ export function QueryConfirmationCard({
       <p className="mb-4 text-sm text-foreground/90">
         {confirmation.estimatedDescription}
       </p>
+
+      {/* Methodology */}
+      {confirmation.methodology && (
+        <div className="mb-4 rounded-lg bg-white/[0.03] border border-white/[0.06] px-3 py-2.5">
+          <p className="text-xs leading-relaxed text-foreground/80">
+            {confirmation.methodology}
+          </p>
+          {confirmation.technicalNotes && (
+            <>
+              <button
+                type="button"
+                onClick={() => setShowTechnical((v) => !v)}
+                aria-label={showTechnical ? "Hide technical details" : "Show technical details"}
+                aria-expanded={showTechnical}
+                className="mt-2 flex items-center gap-1 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                <Info className="size-3" aria-hidden="true" />
+                Technical details
+                <svg
+                  className={cn("size-2.5 transition-transform", showTechnical && "rotate-180")}
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {showTechnical && (
+                <dl className="mt-2 space-y-2 text-[11px]">
+                  {confirmation.technicalNotes.columnMappings.length > 0 && (
+                    <div>
+                      <dt className="font-medium text-muted-foreground">Columns used</dt>
+                      <dd className="mt-0.5 space-y-0.5">
+                        {confirmation.technicalNotes.columnMappings.map((m, i) => (
+                          <p key={i} className="text-foreground/70">
+                            <code className="rounded bg-glass px-1 py-0.5 font-mono text-[10px]">{m.fieldName}</code>
+                            {" "}— {m.rationale}
+                          </p>
+                        ))}
+                      </dd>
+                    </div>
+                  )}
+                  {confirmation.technicalNotes.assumptions.length > 0 && (
+                    <div>
+                      <dt className="font-medium text-muted-foreground">Assumptions</dt>
+                      <dd className="mt-0.5">
+                        <ul className="list-inside list-disc text-foreground/70">
+                          {confirmation.technicalNotes.assumptions.map((a, i) => (
+                            <li key={i}>{a}</li>
+                          ))}
+                        </ul>
+                      </dd>
+                    </div>
+                  )}
+                  {confirmation.technicalNotes.exclusions.length > 0 && (
+                    <div>
+                      <dt className="font-medium text-muted-foreground">Exclusions</dt>
+                      <dd className="mt-0.5">
+                        <ul className="list-inside list-disc text-foreground/70">
+                          {confirmation.technicalNotes.exclusions.map((e, i) => (
+                            <li key={i}>{e}</li>
+                          ))}
+                        </ul>
+                      </dd>
+                    </div>
+                  )}
+                </dl>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Details grid */}
       <dl className="mb-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-xs">
