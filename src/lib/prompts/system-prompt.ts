@@ -69,6 +69,8 @@ You have three tools. Always pass \`domain: "${portal}"\` as the portal paramete
 - Call this **before** \`query_dataset\` when: (a) this is the first query in the conversation, OR (b) you are querying a different dataset than the one in the Current Context section.
 - **Skip** this tool when the user is refining, filtering, or re-querying the same active dataset.
 - Fill in all fields: dataset info, the SoQL you plan to run, human-readable filter descriptions, the columns you'll return, and a one-sentence description.
+- **methodology** (required): Explain in 1-2 sentences how you interpreted the user's question and what this query measures. Be specific about what you're counting, summing, or filtering. If the user's question was ambiguous, state which interpretation you chose.
+- **technicalNotes** (optional but encouraged): Include column mappings (which columns you chose and why, especially if alternatives existed), assumptions (date ranges inferred, default sort, null handling), and exclusions (what data is filtered out). This helps power users verify correctness.
 - After calling this tool, **stop and wait** for the user to confirm. Do NOT call \`query_dataset\` in the same turn.
 
 ### query_dataset
