@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Play, MessageSquare } from "lucide-react";
+import { Play, MessageSquare, Code } from "lucide-react";
 import { FilterEditor } from "@/components/data/filter-editor";
 import { cn } from "@/lib/utils";
 import type { QueryConfirmation, QueryFilter, DatasetColumn } from "@/types";
@@ -29,6 +29,7 @@ export function QueryConfirmationCard({
   onAdjust,
 }: QueryConfirmationCardProps) {
   const [acted, setActed] = useState(false);
+  const [showSoql, setShowSoql] = useState(false);
   const normalizedFilters = normalizeFilters(confirmation.filters);
   const availableColumns: DatasetColumn[] = confirmation.availableColumns ?? [];
   const [filters, setFilters] = useState<QueryFilter[]>(normalizedFilters);
@@ -62,9 +63,22 @@ export function QueryConfirmationCard({
         <div className="flex size-6 items-center justify-center rounded-md bg-primary/10">
           <Play className="size-3 text-primary" aria-hidden="true" />
         </div>
-        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <h3 className="flex-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
           Query Plan
         </h3>
+
+        <button
+          type="button"
+          onClick={() => setShowSoql((v) => !v)}
+          aria-label={showSoql ? "Hide SoQL" : "View SoQL"}
+          aria-expanded={showSoql}
+          className={cn(
+            "flex size-6 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground",
+            showSoql && "bg-white/[0.08] text-foreground"
+          )}
+        >
+          <Code className="size-3.5" aria-hidden="true" />
+        </button>
       </div>
 
       {/* Description */}
@@ -105,6 +119,13 @@ export function QueryConfirmationCard({
           </>
         )}
       </dl>
+
+      {/* SoQL reveal */}
+      {showSoql && (
+        <pre className="mb-4 overflow-x-auto rounded-lg bg-white/[0.04] border border-white/[0.06] px-3 py-2.5 font-mono text-xs text-foreground/90 whitespace-pre-wrap break-all">
+          {confirmation.soql}
+        </pre>
+      )}
 
       {/* Actions */}
       <div className="flex items-center gap-2">
