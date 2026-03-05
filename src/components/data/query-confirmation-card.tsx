@@ -19,12 +19,14 @@ function normalizeFilters(raw: unknown): QueryFilter[] {
 
 interface QueryConfirmationCardProps {
   confirmation: QueryConfirmation;
+  toolCallId?: string;
   onRun: (filters: { original: QueryFilter[]; current: QueryFilter[] }) => void;
   onAdjust: () => void;
 }
 
 export function QueryConfirmationCard({
   confirmation,
+  toolCallId,
   onRun,
   onAdjust,
 }: QueryConfirmationCardProps) {

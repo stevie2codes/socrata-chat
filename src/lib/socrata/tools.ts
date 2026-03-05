@@ -232,7 +232,8 @@ const confirm_query = tool({
       .optional()
       .describe("Technical details for power users — column choices, assumptions, and exclusions"),
   }),
-  execute: async (input) => input,
+  // No execute — this is a client-side tool. The SDK pauses when Claude
+  // calls it and waits for addToolOutput() from the UI.
 });
 
 // ---------------------------------------------------------------------------

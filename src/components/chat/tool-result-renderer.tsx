@@ -9,9 +9,10 @@ import { ProvenanceFooter } from "@/components/data/provenance-footer";
 
 interface ToolResultRendererProps {
   toolName: string;
+  toolCallId?: string;
   output: unknown;
-  onConfirmRun?: (filters: { original: QueryFilter[]; current: QueryFilter[] }) => void;
-  onConfirmAdjust?: () => void;
+  onConfirmRun?: (args: { toolCallId: string; filters: { original: QueryFilter[]; current: QueryFilter[] } }) => void;
+  onConfirmAdjust?: (args: { toolCallId: string }) => void;
 }
 
 function isCatalogResults(output: unknown): output is CatalogResult[] {
@@ -45,6 +46,7 @@ function isQueryConfirmation(output: unknown): output is QueryConfirmation {
 
 export function ToolResultRenderer({
   toolName,
+  toolCallId,
   output,
   onConfirmRun,
   onConfirmAdjust,
@@ -57,8 +59,9 @@ export function ToolResultRenderer({
     return (
       <QueryConfirmationCard
         confirmation={output}
-        onRun={(filters) => onConfirmRun?.(filters)}
-        onAdjust={() => onConfirmAdjust?.()}
+        toolCallId={toolCallId}
+        onRun={(filters) => toolCallId && onConfirmRun?.({ toolCallId, filters })}
+        onAdjust={() => toolCallId && onConfirmAdjust?.({ toolCallId })}
       />
     );
   }

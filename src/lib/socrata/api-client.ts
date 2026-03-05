@@ -177,6 +177,13 @@ function cleanSoQL(query: string, datasetId: string, limit: number): string {
 // Public API
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Metadata cache — schemas rarely change; avoid redundant fetches per session
+// ---------------------------------------------------------------------------
+
+const metadataCache = new Map<string, { data: DatasetMetadata; expiry: number }>();
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
 /**
  * Search the Socrata Discovery API catalog for datasets matching a query.
  * Results are filtered to only include datasets whose permalink contains the
@@ -247,6 +254,7 @@ export async function searchCatalog({
 
 /**
  * Fetch full metadata for a specific dataset, including column schema.
+ * Results are cached in-memory for 5 minutes to avoid redundant fetches.
  */
 export async function getDatasetMetadata({
   domain,
@@ -255,6 +263,10 @@ export async function getDatasetMetadata({
   domain: string;
   datasetId: string;
 }): Promise<DatasetMetadata> {
+  const cacheKey = `${domain}:${datasetId}`;
+  const cached = metadataCache.get(cacheKey);
+  if (cached && Date.now() < cached.expiry) return cached.data;
+
   const url = `https://${domain}/api/views/${datasetId}.json`;
   const response = await fetchWithRetry(url, domain, datasetId);
   const body = (await response.json()) as Record<string, unknown>;
@@ -271,7 +283,7 @@ export async function getDatasetMetadata({
 
   const owner = body.owner as Record<string, unknown> | undefined;
 
-  return {
+  const metadata: DatasetMetadata = {
     id: String(body.id ?? ""),
     name: String(body.name ?? ""),
     description: String(body.description ?? ""),
@@ -284,6 +296,9 @@ export async function getDatasetMetadata({
     owner: owner ? String(owner.displayName ?? "") : "",
     attribution: String(body.attribution ?? ""),
   };
+
+  metadataCache.set(cacheKey, { data: metadata, expiry: Date.now() + CACHE_TTL_MS });
+  return metadata;
 }
 
 /**

@@ -1,11 +1,17 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, type UIMessage, isToolUIPart, getToolName } from "ai";
+import {
+  DefaultChatTransport,
+  type UIMessage,
+  isToolUIPart,
+  getToolName,
+} from "ai";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SquarePen, PanelRight } from "lucide-react";
 import { ChatMessageList } from "@/components/chat/chat-message-list";
 import { ChatInput } from "@/components/chat/chat-input";
+import { ErrorCallout } from "@/components/data/error-callout";
 import { StarterPrompts } from "@/components/chat/starter-prompts";
 import { KeyboardHelpDialog } from "@/components/chat/keyboard-help-dialog";
 import { ContextSidebar } from "@/components/sidebar/context-sidebar";
@@ -40,8 +46,39 @@ export default function Home() {
     });
   }
 
-  const { messages, setMessages, sendMessage, status } = useChat({
+  // Track when we've just provided a client-side tool output so
+  // sendAutomaticallyWhen only fires once per confirmation action.
+  const pendingConfirmRef = useRef(false);
+
+  const { messages, setMessages, sendMessage, stop, addToolOutput, status, error, clearError } = useChat({
     transport: transportRef.current,
+    experimental_throttle: 50,
+    sendAutomaticallyWhen: () => {
+      if (pendingConfirmRef.current) {
+        pendingConfirmRef.current = false;
+        return true;
+      }
+      return false;
+    },
+    onToolCall: ({ toolCall }) => {
+      // confirm_query is a client-side tool — the UI renders the
+      // QueryConfirmationCard and calls addToolOutput when the user acts.
+      // Other tools execute server-side and don't hit this callback.
+    },
+    onError: (err) => {
+      console.error("[chat] Stream error:", err);
+    },
+    onFinish: ({ message, messages: allMessages, isAbort, isError }) => {
+      if (isAbort) return;
+      if (isError) {
+        console.error("[chat] Response ended with error");
+        return;
+      }
+      console.log("[chat] Response complete", {
+        messageId: message.id,
+        totalMessages: allMessages.length,
+      });
+    },
   });
 
   useSessionSync(messages, dispatch, portalDomain);
@@ -57,6 +94,12 @@ export default function Home() {
   const isLoading = status === "streaming" || status === "submitted";
   const isHero = messages.length === 0;
 
+  const isLoadingRef = useRef(isLoading);
+  isLoadingRef.current = isLoading;
+
+  const stopRef = useRef(stop);
+  stopRef.current = stop;
+
   const handlePortalChange = useCallback(
     (domain: string) => {
       setPortalDomain(domain);
@@ -69,11 +112,12 @@ export default function Home() {
     (e: React.FormEvent) => {
       e.preventDefault();
       if (input.trim() && !isLoading) {
+        if (error) clearError();
         sendMessage({ text: input });
         setInput("");
       }
     },
-    [input, isLoading, sendMessage]
+    [input, isLoading, sendMessage, error, clearError]
   );
 
   const handleStarterSelect = useCallback(
@@ -91,17 +135,46 @@ export default function Home() {
   );
 
   const handleConfirmRun = useCallback(
-    (filters: { original: QueryFilter[]; current: QueryFilter[] }) => {
-      const message = composeFilterMessage(filters.original, filters.current);
-      sendMessage({ text: message });
+    ({
+      toolCallId,
+      filters,
+    }: {
+      toolCallId: string;
+      filters: { original: QueryFilter[]; current: QueryFilter[] };
+    }) => {
+      const filterMessage = composeFilterMessage(filters.original, filters.current);
+      pendingConfirmRef.current = true;
+      addToolOutput({
+        tool: "confirm_query",
+        toolCallId,
+        output: {
+          decision: "run",
+          filterChanges: filterMessage,
+          currentFilters: filters.current,
+        },
+      });
+      // sendAutomaticallyWhen detects the completed tool call and
+      // auto-sends the conversation so Claude proceeds to query_dataset
     },
-    [sendMessage]
+    [addToolOutput]
   );
 
-  const handleConfirmAdjust = useCallback(() => {
-    setInput("Actually, I'd like to change ");
-    setTimeout(() => inputRef.current?.focus(), 0);
-  }, []);
+  const handleConfirmAdjust = useCallback(
+    ({ toolCallId }: { toolCallId: string }) => {
+      pendingConfirmRef.current = true;
+      addToolOutput({
+        tool: "confirm_query",
+        toolCallId,
+        output: {
+          decision: "adjust",
+          userMessage: "User wants to adjust the query",
+        },
+      });
+      setInput("Actually, I'd like to change ");
+      setTimeout(() => inputRef.current?.focus(), 0);
+    },
+    [addToolOutput]
+  );
 
   const handleNewChat = useCallback(() => {
     setMessages([]);
@@ -136,7 +209,9 @@ export default function Home() {
       }
     });
     shortcuts.set("escape", () => {
-      if (document.activeElement instanceof HTMLElement) {
+      if (isLoadingRef.current) {
+        stopRef.current();
+      } else if (document.activeElement instanceof HTMLElement) {
         document.activeElement.blur();
       }
     });
@@ -169,6 +244,7 @@ export default function Home() {
               onInputChange={setInput}
               onSubmit={handleSubmit}
               isLoading={isLoading}
+              onStop={stop}
               textareaRef={inputRef}
               portal={portal}
               portals={PORTALS}
@@ -246,11 +322,19 @@ export default function Home() {
         {/* Dock surface */}
         <div className="bg-background/80 pb-[env(safe-area-inset-bottom)]">
           <div className="pointer-events-auto mx-auto w-full max-w-[720px] px-4 pb-4 pt-1">
+            {error && (
+              <ErrorCallout
+                message={error.message || "Something went wrong. Please try again."}
+                onRetry={clearError}
+                retryLabel="Dismiss"
+              />
+            )}
             <ChatInput
               input={input}
               onInputChange={setInput}
               onSubmit={handleSubmit}
               isLoading={isLoading}
+              onStop={stop}
               textareaRef={inputRef}
               portal={portal}
               portals={PORTALS}

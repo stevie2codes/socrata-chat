@@ -15,8 +15,8 @@ interface ChatMessageProps {
   isStreaming?: boolean;
   isLast?: boolean;
   onSuggestionSelect?: (suggestion: string) => void;
-  onConfirmRun?: (filters: { original: QueryFilter[]; current: QueryFilter[] }) => void;
-  onConfirmAdjust?: () => void;
+  onConfirmRun?: (args: { toolCallId: string; filters: { original: QueryFilter[]; current: QueryFilter[] } }) => void;
+  onConfirmAdjust?: (args: { toolCallId: string }) => void;
 }
 
 const TOOL_LABELS: Record<string, string> = {
@@ -111,21 +111,33 @@ export function ChatMessage({ message, isStreaming = false, isLast = false, onSu
       <div className="max-w-full text-sm leading-[1.7]">
         {hasText && <MarkdownContent content={textContent} />}
 
-        {/* Render completed tool results */}
+        {/* Render completed tool results + client-side tools awaiting input */}
         {message.parts
           .filter(
-            (part): part is Extract<typeof part, { state: string }> =>
-              isToolUIPart(part) && part.state === "output-available"
+            (part): part is Extract<typeof part, { state: string }> => {
+              if (!isToolUIPart(part)) return false;
+              // Client-side tools (confirm_query) render when input is available
+              if (getToolName(part) === "confirm_query" && part.state === "input-available") return true;
+              // All other tools render when output is available
+              return part.state === "output-available";
+            }
           )
-          .map((part, i) => (
-            <ToolResultRenderer
-              key={i}
-              toolName={getToolName(part as Parameters<typeof getToolName>[0])}
-              output={(part as Record<string, unknown>).output}
-              onConfirmRun={onConfirmRun}
-              onConfirmAdjust={onConfirmAdjust}
-            />
-          ))}
+          .map((part, i) => {
+            const toolName = getToolName(part as Parameters<typeof getToolName>[0]);
+            const typedPart = part as Record<string, unknown>;
+            // For client-side tools awaiting input, use the tool's input args as the display data
+            const output = typedPart.state === "input-available" ? typedPart.input : typedPart.output;
+            return (
+              <ToolResultRenderer
+                key={i}
+                toolName={toolName}
+                toolCallId={typedPart.toolCallId as string}
+                output={output}
+                onConfirmRun={onConfirmRun}
+                onConfirmAdjust={onConfirmAdjust}
+              />
+            );
+          })}
 
         {/* Render tool errors */}
         {message.parts

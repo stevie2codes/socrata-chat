@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useState } from "react";
-import { ArrowUp } from "lucide-react";
+import { ArrowUp, Square } from "lucide-react";
 import { PortalSelector } from "@/components/chat/portal-selector";
 import { cn } from "@/lib/utils";
 import type { Portal } from "@/lib/portals";
@@ -11,6 +11,7 @@ interface ChatInputProps {
   onInputChange: (value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
   isLoading: boolean;
+  onStop?: () => void;
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   portal: Portal;
   portals: Portal[];
@@ -49,6 +50,7 @@ export function ChatInput({
   onInputChange,
   onSubmit,
   isLoading,
+  onStop,
   textareaRef,
   portal,
   portals,
@@ -141,20 +143,35 @@ export function ChatInput({
             onPortalChange={onPortalChange}
           />
 
-          <button
-            type="submit"
-            disabled={isLoading || !hasInput}
-            aria-label="Send message"
-            className={cn(
-              "flex items-center justify-center rounded-lg transition-all duration-200",
-              isHero ? "size-8" : "size-7",
-              hasInput && !isLoading
-                ? "bg-primary text-primary-foreground shadow-[0_0_20px_oklch(0.68_0.16_250_/_0.4)] hover:shadow-[0_0_28px_oklch(0.68_0.16_250_/_0.55)] hover:scale-105 active:scale-95"
-                : "bg-white/[0.06] text-muted-foreground/40"
-            )}
-          >
-            <ArrowUp className={cn(isHero ? "size-4" : "size-3.5")} strokeWidth={2.5} />
-          </button>
+          {isLoading && onStop ? (
+            <button
+              type="button"
+              onClick={onStop}
+              aria-label="Stop generating"
+              className={cn(
+                "flex items-center justify-center rounded-lg transition-all duration-200",
+                isHero ? "size-8" : "size-7",
+                "bg-white/[0.1] text-muted-foreground hover:bg-white/[0.15] hover:text-foreground active:scale-95"
+              )}
+            >
+              <Square className={cn(isHero ? "size-3" : "size-2.5")} strokeWidth={0} fill="currentColor" />
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={isLoading || !hasInput}
+              aria-label="Send message"
+              className={cn(
+                "flex items-center justify-center rounded-lg transition-all duration-200",
+                isHero ? "size-8" : "size-7",
+                hasInput && !isLoading
+                  ? "bg-primary text-primary-foreground shadow-[0_0_20px_oklch(0.68_0.16_250_/_0.4)] hover:shadow-[0_0_28px_oklch(0.68_0.16_250_/_0.55)] hover:scale-105 active:scale-95"
+                  : "bg-white/[0.06] text-muted-foreground/40"
+              )}
+            >
+              <ArrowUp className={cn(isHero ? "size-4" : "size-3.5")} strokeWidth={2.5} />
+            </button>
+          )}
         </div>
       </div>
     </form>

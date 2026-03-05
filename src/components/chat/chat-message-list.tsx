@@ -11,8 +11,8 @@ interface ChatMessageListProps {
   isLoading: boolean;
   children?: ReactNode;
   onSuggestionSelect?: (suggestion: string) => void;
-  onConfirmRun?: (filters: { original: QueryFilter[]; current: QueryFilter[] }) => void;
-  onConfirmAdjust?: () => void;
+  onConfirmRun?: (args: { toolCallId: string; filters: { original: QueryFilter[]; current: QueryFilter[] } }) => void;
+  onConfirmAdjust?: (args: { toolCallId: string }) => void;
 }
 
 export function ChatMessageList({
