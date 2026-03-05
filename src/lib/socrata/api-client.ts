@@ -1,6 +1,8 @@
 // Low-level HTTP client for Socrata REST APIs.
 // No AI SDK dependency — pure fetch-based with retry logic.
 
+import { buildSodaApiUrl, buildPortalPermalink } from "@/lib/utils/soda-url";
+
 // ---------------------------------------------------------------------------
 // Error class
 // ---------------------------------------------------------------------------
@@ -73,6 +75,13 @@ export interface QueryResult {
   totalRows: number;
   query: string;
   executionTimeMs: number;
+  provenance?: {
+    domain: string;
+    datasetId: string;
+    sodaApiUrl: string;
+    portalPermalink: string;
+    queryTimestamp: string;
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -308,5 +317,12 @@ export async function queryDataset({
     totalRows: data.length,
     query: cleaned,
     executionTimeMs,
+    provenance: {
+      domain,
+      datasetId,
+      sodaApiUrl: buildSodaApiUrl(domain, datasetId, cleaned),
+      portalPermalink: buildPortalPermalink(domain, datasetId),
+      queryTimestamp: new Date().toISOString(),
+    },
   };
 }
