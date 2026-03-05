@@ -5,6 +5,7 @@ import type { QueryConfirmation, QueryFilter } from "@/types";
 import { DatasetCardList } from "@/components/data/dataset-card-list";
 import { DataTable } from "@/components/data/data-table";
 import { QueryConfirmationCard } from "@/components/data/query-confirmation-card";
+import { ProvenanceFooter } from "@/components/data/provenance-footer";
 
 interface ToolResultRendererProps {
   toolName: string;
@@ -63,7 +64,19 @@ export function ToolResultRenderer({
   }
 
   if (toolName === "query_dataset" && isQueryResult(output)) {
-    return <DataTable result={output} />;
+    const limitApplied = output.data.length >= 100 && !output.query.match(/LIMIT\s+\d+/i);
+    return (
+      <>
+        <DataTable result={output} />
+        {output.provenance && (
+          <ProvenanceFooter
+            provenance={output.provenance}
+            totalRows={output.totalRows}
+            limitApplied={limitApplied}
+          />
+        )}
+      </>
+    );
   }
 
   return null;
