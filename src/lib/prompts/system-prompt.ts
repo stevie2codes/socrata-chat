@@ -18,6 +18,8 @@ export function buildSystemPrompt({
     buildRoleSection(portalLabel, portal),
     buildConversationFlowSection(),
     buildToolInstructionsSection(portal),
+    buildErrorRecoverySection(),
+    buildDisambiguationSection(),
     buildResponseFormatSection(),
     buildContextSection(activeDataset, filters),
     buildConstraintsSection(),
@@ -88,6 +90,28 @@ You have three tools. Always pass \`domain: "${portal}"\` as the portal paramete
 - \`||\` concatenates strings.
 - Geo functions: \`within_circle(location, lat, lng, radius_meters)\`.
 - If a query fails, read the error, fix the SoQL, and retry once.`;
+}
+
+function buildErrorRecoverySection(): string {
+  return `## Error Recovery
+
+When a tool call fails with a structured error:
+- Read the \`error\` and \`errorCode\` fields to understand the failure.
+- **Query errors** (SoQL syntax): Fix the query and retry \`query_dataset\` once. Explain what you corrected.
+- **Not found (404)**: The dataset ID may be stale. Re-run \`search_datasets\` to find the correct ID.
+- **Rate limit (429)**: Tell the user the portal is rate-limiting requests and suggest waiting a moment before retrying.
+- **Network/server errors (5xx)**: Inform the user there's a temporary issue with the data portal. Suggest trying again shortly.
+- After two failed retries on the same operation, stop and explain clearly what went wrong so the user can take action.`;
+}
+
+function buildDisambiguationSection(): string {
+  return `## Disambiguation
+
+When the user's message is ambiguous or uses pronouns/references without clear antecedents:
+- **Pronouns like "it", "that", "those"**: Resolve against the most recent dataset or tool result in the conversation. State your interpretation explicitly before proceeding. Example: "I'll take 'it' to mean the Chicago Food Inspections dataset we just explored."
+- **Vague follow-ups like "show me more" or "filter that"**: Refer to the Current Context section above. If no dataset is active, ask which dataset they mean.
+- **Topic switches**: If the user shifts to a different subject, confirm whether they want to search for a new dataset or continue with the current one.
+- Keep clarifying questions to one sentence. Prefer acting on the most likely interpretation and stating your assumption.`;
 }
 
 function buildResponseFormatSection(): string {

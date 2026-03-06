@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useId } from "react";
 import { Play, MessageSquare, Code, Info, ChevronDown, Plus, Filter } from "lucide-react";
 import { FilterEditor } from "@/components/data/filter-editor";
 import { cn } from "@/lib/utils";
@@ -33,6 +33,7 @@ interface QueryPlanSummaryProps {
 
 export function QueryPlanSummary({ confirmation, decision }: QueryPlanSummaryProps) {
   const [expanded, setExpanded] = useState(false);
+  const detailId = useId();
 
   if (decision === "adjust") {
     return (
@@ -48,6 +49,8 @@ export function QueryPlanSummary({ confirmation, decision }: QueryPlanSummaryPro
       <button
         type="button"
         onClick={() => setExpanded((v) => !v)}
+        aria-expanded={expanded}
+        aria-controls={detailId}
         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-white/[0.04] hover:text-foreground"
       >
         <Play className="size-3 shrink-0 text-primary/60" aria-hidden="true" />
@@ -66,7 +69,7 @@ export function QueryPlanSummary({ confirmation, decision }: QueryPlanSummaryPro
       </button>
 
       {expanded && (
-        <div className="mt-1 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
+        <div id={detailId} className="mt-1 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
           <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-xs">
             <dt className="font-medium text-muted-foreground">Dataset</dt>
             <dd className="text-foreground/80">{confirmation.dataset.name} ({confirmation.dataset.id})</dd>

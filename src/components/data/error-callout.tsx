@@ -16,7 +16,7 @@ export function ErrorCallout({
   retryLabel = "Try again",
 }: ErrorCalloutProps) {
   return (
-    <div className="my-3 flex items-start gap-3 rounded-lg glass-subtle px-4 py-3">
+    <div role="alert" className="my-3 flex items-start gap-3 rounded-lg glass-subtle px-4 py-3">
       <AlertTriangle
         className="mt-0.5 size-4 shrink-0 text-destructive"
         aria-hidden="true"

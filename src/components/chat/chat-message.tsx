@@ -6,9 +6,28 @@ import { cn } from "@/lib/utils";
 import { parseSuggestions, getHeuristicSuggestions } from "@/lib/suggestions";
 import { MarkdownContent } from "@/components/chat/markdown-content";
 import { ToolResultRenderer } from "@/components/chat/tool-result-renderer";
+import { ThinkingBlock } from "@/components/chat/thinking-block";
 import { ErrorCallout } from "@/components/data/error-callout";
 import { SuggestionChips } from "@/components/chat/suggestion-chips";
+import { StreamingPhaseIndicator } from "@/components/chat/streaming-phases";
+import { DatasetCardSkeleton, DataTableSkeleton } from "@/components/data/loading-skeleton";
 import type { QueryFilter } from "@/types";
+
+function ToolLoadingSkeleton({ toolName }: { toolName: string }) {
+  if (toolName === "search_datasets") {
+    return (
+      <div className="space-y-2">
+        <DatasetCardSkeleton />
+        <DatasetCardSkeleton />
+        <DatasetCardSkeleton />
+      </div>
+    );
+  }
+  if (toolName === "query_dataset") {
+    return <DataTableSkeleton />;
+  }
+  return null;
+}
 
 interface ChatMessageProps {
   message: UIMessage;
@@ -19,16 +38,23 @@ interface ChatMessageProps {
   onConfirmAdjust?: (args: { toolCallId: string }) => void;
 }
 
-const TOOL_LABELS: Record<string, string> = {
-  search_datasets: "Searching datasets",
-  get_dataset_info: "Reading dataset schema",
-  confirm_query: "Preparing query plan",
-  query_dataset: "Querying data",
-};
-
-function extractVisibleText(parts: UIMessage["parts"]): string {
+function extractMessageText(parts: UIMessage["parts"]): {
+  thinkingText: string;
+  responseText: string;
+} {
   const COMPLETED = new Set(["output-available", "output-error", "output-denied"]);
+  const hasAnyTool = parts.some((p) => isToolUIPart(p));
 
+  // No tools called — all text is the response (plain conversation)
+  if (!hasAnyTool) {
+    return {
+      thinkingText: "",
+      responseText: parts.filter((p) => p.type === "text").map((p) => p.text).join("\n\n"),
+    };
+  }
+
+  // Find the boundary: text after the last completed tool = response,
+  // everything else that's interleaved with tools = thinking.
   let lastCompletedToolIndex = -1;
   for (let i = parts.length - 1; i >= 0; i--) {
     if (isToolUIPart(parts[i]) && COMPLETED.has((parts[i] as any).state)) {
@@ -37,24 +63,38 @@ function extractVisibleText(parts: UIMessage["parts"]): string {
     }
   }
 
-  // No tools called — show all text (plain conversation)
+  // Tools exist but none completed yet — all pre-tool text is thinking
   if (lastCompletedToolIndex === -1) {
-    return parts.filter((p) => p.type === "text").map((p) => p.text).join("\n\n");
+    const thinkingParts: string[] = [];
+    for (const part of parts) {
+      if (isToolUIPart(part)) break;
+      if (part.type === "text" && part.text.trim()) thinkingParts.push(part.text);
+    }
+    return { thinkingText: thinkingParts.join("\n\n"), responseText: "" };
   }
 
-  // Only text after the last completed tool
-  return parts
+  // Thinking = all text parts up to and including the last completed tool's position
+  // (this captures pre-tool text AND inter-tool reasoning like "Now let me query...")
+  const thinkingParts: string[] = [];
+  for (const p of parts.slice(0, lastCompletedToolIndex + 1)) {
+    if (p.type === "text" && p.text.trim()) thinkingParts.push(p.text);
+  }
+
+  // Response = text after the last completed tool
+  const responseText = parts
     .slice(lastCompletedToolIndex + 1)
     .filter((p) => p.type === "text")
     .map((p) => p.text)
     .join("\n\n");
+
+  return { thinkingText: thinkingParts.join("\n\n"), responseText };
 }
 
 export function ChatMessage({ message, isStreaming = false, isLast = false, onSuggestionSelect, onConfirmRun, onConfirmAdjust }: ChatMessageProps) {
   const isUser = message.role === "user";
 
-  const rawText = extractVisibleText(message.parts);
-  const { cleanText: textContent, suggestions: parsedSuggestions } = parseSuggestions(rawText);
+  const { thinkingText, responseText } = extractMessageText(message.parts);
+  const { cleanText: textContent, suggestions: parsedSuggestions } = parseSuggestions(responseText);
 
   const toolNames = message.parts
     .filter((part) => isToolUIPart(part))
@@ -109,6 +149,11 @@ export function ChatMessage({ message, isStreaming = false, isLast = false, onSu
   return (
     <article role="article" aria-label={ariaLabel} className="flex w-full justify-start">
       <div className="w-full text-sm leading-[1.7]">
+        {/* Thinking block — reasoning text before tool calls */}
+        {thinkingText.trim() && (
+          <ThinkingBlock text={thinkingText} isStreaming={isStreaming && !hasText} />
+        )}
+
         {/* Render tool results FIRST — data is the star, text is supporting.
             Tool results (DataTable) get full container width (up to 960px). */}
         {message.parts
@@ -139,6 +184,11 @@ export function ChatMessage({ message, isStreaming = false, isLast = false, onSu
               />
             );
           })}
+
+        {/* Loading skeleton while tool is in-flight */}
+        {isStreaming && activeToolName && (
+          <ToolLoadingSkeleton toolName={activeToolName} />
+        )}
 
         {/* Text and non-data content stay at readable 720px max */}
         <div className="max-w-[720px]">
@@ -178,36 +228,11 @@ export function ChatMessage({ message, isStreaming = false, isLast = false, onSu
             />
           )}
 
-          {isStreaming && activeToolName && (
-            <div className="mt-3 flex items-center gap-3">
-              <div className="relative h-0.5 w-32 overflow-hidden rounded-full bg-glass">
-                <div
-                  className="absolute inset-0 rounded-full"
-                  style={{
-                    background: "linear-gradient(90deg, transparent, var(--primary), transparent)",
-                    animation: "shimmer 1.8s ease-in-out infinite",
-                  }}
-                />
-              </div>
-              <span className="text-xs font-medium text-muted-foreground">
-                {TOOL_LABELS[activeToolName] ?? "Working"}...
-              </span>
-            </div>
-          )}
-
-          {isStreaming && isOnlyTools && !activeToolName && (
-            <div className="flex items-center gap-3">
-              <div className="relative h-0.5 w-32 overflow-hidden rounded-full bg-glass">
-                <div
-                  className="absolute inset-0 rounded-full"
-                  style={{
-                    background: "linear-gradient(90deg, transparent, var(--primary), transparent)",
-                    animation: "shimmer 1.8s ease-in-out infinite",
-                  }}
-                />
-              </div>
-              <span className="text-xs font-medium text-muted-foreground">Working...</span>
-            </div>
+          {isStreaming && (activeToolName || isOnlyTools) && (
+            <StreamingPhaseIndicator
+              activeToolName={activeToolName}
+              isOnlyTools={isOnlyTools}
+            />
           )}
         </div>
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useId } from "react";
 import { Download } from "lucide-react";
 import type { QueryResult } from "@/lib/socrata/api-client";
 import { downloadCsv } from "@/lib/utils/csv-export";
@@ -34,6 +34,7 @@ export function DataTable({ result, defaultCollapsed }: DataTableProps) {
   const defaultOpen = defaultCollapsed ? false : totalRows <= 10;
   const [open, setOpen] = useState(defaultOpen);
   const [view, setView] = useState<ViewMode>("table");
+  const contentId = useId();
 
   const chartConfig = useMemo(
     () => (isChartable(data) ? detectChartConfig(data) : null),
@@ -111,6 +112,8 @@ export function DataTable({ result, defaultCollapsed }: DataTableProps) {
       <button
         type="button"
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-controls={contentId}
         className="flex items-center gap-2 px-3 pb-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <svg
@@ -127,11 +130,11 @@ export function DataTable({ result, defaultCollapsed }: DataTableProps) {
 
       {/* Content */}
       {open && view === "chart" && chartConfig ? (
-        <div className="px-1 pb-3">
+        <div id={contentId} className="px-1 pb-3">
           <BarChartView data={data} config={chartConfig} />
         </div>
       ) : open ? (
-        <div className="overflow-x-auto px-1 pb-3">
+        <div id={contentId} className="overflow-x-auto px-1 pb-3">
           <Table>
             <TableHeader className="glass-subtle">
               <TableRow>

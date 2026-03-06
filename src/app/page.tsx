@@ -10,6 +10,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { SquarePen, PanelRight, PanelLeft } from "lucide-react";
 import { ChatMessageList } from "@/components/chat/chat-message-list";
+import { ChatErrorBoundary } from "@/components/chat/error-boundary";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ErrorCallout } from "@/components/data/error-callout";
 import { StarterPrompts } from "@/components/chat/starter-prompts";
@@ -197,6 +198,27 @@ export default function Home() {
     [addToolOutput]
   );
 
+  const handleRetryLastMessage = useCallback(() => {
+    const lastUserMsg = [...messagesRef.current]
+      .reverse()
+      .find((m) => m.role === "user");
+    const lastText =
+      lastUserMsg?.parts
+        .filter((p): p is Extract<typeof p, { type: "text" }> => p.type === "text")
+        .map((p) => p.text)
+        .join("") ?? "";
+
+    clearError();
+    if (lastText.trim()) {
+      // Remove incomplete assistant message so we don't send partial state to model
+      const msgs = messagesRef.current;
+      if (msgs.at(-1)?.role === "assistant") {
+        setMessages(msgs.slice(0, -1));
+      }
+      sendMessage({ text: lastText });
+    }
+  }, [clearError, sendMessage, setMessages]);
+
   const handleNewChat = useCallback(() => {
     setMessages([]);
     dispatch({ type: "RESET" });
@@ -270,7 +292,7 @@ export default function Home() {
 
   if (isHero) {
     return (
-      <div className="relative z-10 flex h-dvh flex-col items-center justify-center px-4">
+      <div id="main-content" className="relative z-10 flex h-dvh flex-col items-center justify-center px-4">
         {/* History toggle — top-left corner */}
         {chatList.length > 0 && (
           <button
@@ -372,6 +394,7 @@ export default function Home() {
       <main
         id="main-content"
         role="main"
+        inert={historyOpen || sidebarOpen ? true : undefined}
         className="flex min-h-0 flex-1 flex-col transition-[padding] duration-200"
         style={{
           paddingRight: sidebarOpen ? 280 : 0,
@@ -379,19 +402,22 @@ export default function Home() {
         }}
       >
         <div className="mx-auto flex w-full min-h-0 max-w-[960px] flex-1 flex-col pb-32">
-          <ChatMessageList
-            messages={messages}
-            isLoading={isLoading}
-            onSuggestionSelect={handleSuggestionSelect}
-            onConfirmRun={handleConfirmRun}
-            onConfirmAdjust={handleConfirmAdjust}
-          />
+          <ChatErrorBoundary>
+            <ChatMessageList
+              messages={messages}
+              isLoading={isLoading}
+              onSuggestionSelect={handleSuggestionSelect}
+              onConfirmRun={handleConfirmRun}
+              onConfirmAdjust={handleConfirmAdjust}
+            />
+          </ChatErrorBoundary>
         </div>
       </main>
 
       {/* Floating bottom dock */}
       <div
         className="pointer-events-none fixed inset-x-0 bottom-0 z-20"
+        inert={historyOpen || sidebarOpen ? true : undefined}
         style={{
           paddingRight: sidebarOpen ? 280 : 0,
           paddingLeft: historyOpen ? 280 : 0,
@@ -405,8 +431,8 @@ export default function Home() {
             {error && (
               <ErrorCallout
                 message={error.message || "Something went wrong. Please try again."}
-                onRetry={clearError}
-                retryLabel="Dismiss"
+                onRetry={handleRetryLastMessage}
+                retryLabel="Retry"
               />
             )}
             <ChatInput

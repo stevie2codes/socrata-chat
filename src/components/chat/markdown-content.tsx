@@ -2,7 +2,7 @@
 
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useState, type ComponentPropsWithoutRef } from "react";
+import { useState, useId, type ComponentPropsWithoutRef } from "react";
 
 interface MarkdownContentProps {
   content: string;
@@ -10,12 +10,15 @@ interface MarkdownContentProps {
 
 function CollapsibleTable({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const contentId = useId();
 
   return (
     <div className="my-4 border-l-2" style={{ borderColor: "oklch(0.68 0.16 250 / 0.3)" }}>
       <button
         type="button"
         onClick={() => setOpen(!open)}
+        aria-expanded={open}
+        aria-controls={contentId}
         className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
       >
         <svg
@@ -29,7 +32,7 @@ function CollapsibleTable({ children }: { children: React.ReactNode }) {
         </svg>
         {open ? "Hide data" : "Show data"}
       </button>
-      {open && <div className="overflow-x-auto px-3 pb-3">{children}</div>}
+      {open && <div id={contentId} className="overflow-x-auto px-3 pb-3">{children}</div>}
     </div>
   );
 }
