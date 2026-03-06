@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { MapPin, X } from "lucide-react";
 import type { SessionState } from "@/types";
 import { getPortalLabel } from "@/lib/portals";
@@ -20,8 +20,11 @@ export function ContextSidebar({
   session,
   onRemoveFilter,
 }: ContextSidebarProps) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     if (!open) return;
+    closeButtonRef.current?.focus();
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -45,6 +48,7 @@ export function ContextSidebar({
           Context
         </span>
         <button
+          ref={closeButtonRef}
           type="button"
           onClick={onClose}
           className="rounded-md p-1 text-muted-foreground hover:text-foreground transition-colors"

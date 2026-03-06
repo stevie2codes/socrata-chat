@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { X, SquarePen, Trash2, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ChatSummary } from "@/types";
@@ -39,8 +39,11 @@ export function ChatHistorySidebar({
   onDeleteChat,
   onNewChat,
 }: ChatHistorySidebarProps) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     if (!open) return;
+    closeButtonRef.current?.focus();
     function handleKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -65,6 +68,7 @@ export function ChatHistorySidebar({
           History
         </span>
         <button
+          ref={closeButtonRef}
           type="button"
           onClick={onClose}
           className="rounded-md p-1 text-muted-foreground hover:text-foreground transition-colors"
@@ -102,6 +106,7 @@ export function ChatHistorySidebar({
                 <li key={chat.id} className="group relative">
                   <button
                     onClick={() => onSelectChat(chat.id)}
+                    aria-current={isActive ? "page" : undefined}
                     className={cn(
                       "flex w-full flex-col gap-0.5 rounded-lg px-3 py-2 text-left transition-colors",
                       isActive

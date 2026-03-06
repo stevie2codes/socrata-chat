@@ -270,6 +270,11 @@
   100% { transform: translateX(100%); }
 }
 
+@keyframes shimmer-bg {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
 @keyframes glow-pulse {
   0%, 100% { opacity: 0.5; }
   50% { opacity: 1; }
