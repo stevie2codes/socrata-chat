@@ -12,7 +12,8 @@ export type SessionAction =
   | { type: "ADD_FILTER"; payload: QueryFilter }
   | { type: "REMOVE_FILTER"; payload: number }
   | { type: "CLEAR_FILTERS" }
-  | { type: "RESET" };
+  | { type: "RESET" }
+  | { type: "RESTORE"; payload: SessionState };
 
 // Default state
 
@@ -64,6 +65,8 @@ export function sessionReducer(
       };
     case "RESET":
       return createInitialState();
+    case "RESTORE":
+      return action.payload;
     default:
       return state;
   }

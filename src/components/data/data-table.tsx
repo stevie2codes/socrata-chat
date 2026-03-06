@@ -17,6 +17,8 @@ import {
 
 interface DataTableProps {
   result: QueryResult;
+  /** Force table collapsed on mount (used for older messages in thread) */
+  defaultCollapsed?: boolean;
 }
 
 function formatCellValue(value: unknown): string {
@@ -27,9 +29,9 @@ function formatCellValue(value: unknown): string {
 
 type ViewMode = "table" | "chart";
 
-export function DataTable({ result }: DataTableProps) {
+export function DataTable({ result, defaultCollapsed }: DataTableProps) {
   const { data, totalRows, executionTimeMs } = result;
-  const defaultOpen = totalRows <= 10;
+  const defaultOpen = defaultCollapsed ? false : totalRows <= 10;
   const [open, setOpen] = useState(defaultOpen);
   const [view, setView] = useState<ViewMode>("table");
 

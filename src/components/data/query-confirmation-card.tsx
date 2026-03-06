@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Play, MessageSquare, Code, Info } from "lucide-react";
+import { useState, useRef } from "react";
+import { Play, MessageSquare, Code, Info, ChevronDown, Plus, Filter } from "lucide-react";
 import { FilterEditor } from "@/components/data/filter-editor";
 import { cn } from "@/lib/utils";
 import type { QueryConfirmation, QueryFilter, DatasetColumn } from "@/types";
@@ -24,6 +24,72 @@ interface QueryConfirmationCardProps {
   onAdjust: () => void;
 }
 
+/* ── Collapsed summary shown after user confirms/adjusts ────────── */
+
+interface QueryPlanSummaryProps {
+  confirmation: QueryConfirmation;
+  decision: "run" | "adjust";
+}
+
+export function QueryPlanSummary({ confirmation, decision }: QueryPlanSummaryProps) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (decision === "adjust") {
+    return (
+      <div className="my-2 flex items-center gap-2 rounded-lg px-3 py-2 text-xs text-muted-foreground">
+        <MessageSquare className="size-3 shrink-0" aria-hidden="true" />
+        <span>Query adjusted</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="my-2">
+      <button
+        type="button"
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-white/[0.04] hover:text-foreground"
+      >
+        <Play className="size-3 shrink-0 text-primary/60" aria-hidden="true" />
+        <span className="min-w-0 truncate text-left">
+          {confirmation.estimatedDescription}
+        </span>
+        <span className="shrink-0 text-muted-foreground/60">
+          &mdash; {confirmation.dataset.name}
+        </span>
+        <svg
+          className={cn("ml-auto size-3 shrink-0 transition-transform", expanded && "rotate-90")}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      {expanded && (
+        <div className="mt-1 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
+          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-xs">
+            <dt className="font-medium text-muted-foreground">Dataset</dt>
+            <dd className="text-foreground/80">{confirmation.dataset.name} ({confirmation.dataset.id})</dd>
+            {confirmation.filters?.length > 0 && (
+              <>
+                <dt className="font-medium text-muted-foreground">Filters</dt>
+                <dd className="text-foreground/80">
+                  {normalizeFilters(confirmation.filters).map((f) => f.label).join(", ")}
+                </dd>
+              </>
+            )}
+          </dl>
+          <pre className="mt-2 overflow-x-auto rounded bg-white/[0.03] px-2 py-1.5 font-mono text-[10px] text-foreground/70 whitespace-pre-wrap break-all">
+            {confirmation.soql}
+          </pre>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── Full interactive card shown before user confirms ───────────── */
+
 export function QueryConfirmationCard({
   confirmation,
   toolCallId,
@@ -36,6 +102,7 @@ export function QueryConfirmationCard({
   const normalizedFilters = normalizeFilters(confirmation.filters);
   const availableColumns: DatasetColumn[] = confirmation.availableColumns ?? [];
   const [filters, setFilters] = useState<QueryFilter[]>(normalizedFilters);
+  const addFilterRef = useRef<(() => void) | null>(null);
 
   const handleRun = () => {
     setActed(true);
@@ -95,103 +162,126 @@ export function QueryConfirmationCard({
           <p className="text-xs leading-relaxed text-foreground/80">
             {confirmation.methodology}
           </p>
-          {confirmation.technicalNotes && (
-            <>
-              <button
-                type="button"
-                onClick={() => setShowTechnical((v) => !v)}
-                aria-label={showTechnical ? "Hide technical details" : "Show technical details"}
-                aria-expanded={showTechnical}
-                className="mt-2 flex items-center gap-1 text-[10px] font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <Info className="size-3" aria-hidden="true" />
-                Technical details
-                <svg
-                  className={cn("size-2.5 transition-transform", showTechnical && "rotate-180")}
-                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {showTechnical && (
-                <dl className="mt-2 space-y-2 text-[11px]">
-                  {confirmation.technicalNotes.columnMappings.length > 0 && (
-                    <div>
-                      <dt className="font-medium text-muted-foreground">Columns used</dt>
-                      <dd className="mt-0.5 space-y-0.5">
-                        {confirmation.technicalNotes.columnMappings.map((m, i) => (
-                          <p key={i} className="text-foreground/70">
-                            <code className="rounded bg-glass px-1 py-0.5 font-mono text-[10px]">{m.fieldName}</code>
-                            {" "}— {m.rationale}
-                          </p>
-                        ))}
-                      </dd>
-                    </div>
-                  )}
-                  {confirmation.technicalNotes.assumptions.length > 0 && (
-                    <div>
-                      <dt className="font-medium text-muted-foreground">Assumptions</dt>
-                      <dd className="mt-0.5">
-                        <ul className="list-inside list-disc text-foreground/70">
-                          {confirmation.technicalNotes.assumptions.map((a, i) => (
-                            <li key={i}>{a}</li>
-                          ))}
-                        </ul>
-                      </dd>
-                    </div>
-                  )}
-                  {confirmation.technicalNotes.exclusions.length > 0 && (
-                    <div>
-                      <dt className="font-medium text-muted-foreground">Exclusions</dt>
-                      <dd className="mt-0.5">
-                        <ul className="list-inside list-disc text-foreground/70">
-                          {confirmation.technicalNotes.exclusions.map((e, i) => (
-                            <li key={i}>{e}</li>
-                          ))}
-                        </ul>
-                      </dd>
-                    </div>
-                  )}
-                </dl>
-              )}
-            </>
-          )}
         </div>
       )}
 
-      {/* Details grid */}
-      <dl className="mb-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-xs">
-        <dt className="font-medium text-muted-foreground">Dataset</dt>
-        <dd className="text-foreground">
-          {confirmation.dataset.name}{" "}
-          <span className="text-muted-foreground">
-            ({confirmation.dataset.id})
-          </span>
-        </dd>
-
-        <dt className="font-medium text-muted-foreground">Rows</dt>
-        <dd className="text-foreground">
-          {formatRowCount(confirmation.dataset.rowCount)} total
-        </dd>
-
-        <dt className="font-medium text-muted-foreground">Filters</dt>
-        <dd>
-          <FilterEditor
-            filters={filters}
-            availableColumns={availableColumns}
-            onChange={setFilters}
-          />
-        </dd>
-
+      {/* Dataset metadata — compact inline */}
+      <div className="mb-4 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-xs">
+        <span>
+          <span className="font-medium text-muted-foreground">Dataset </span>
+          <span className="text-foreground">{confirmation.dataset.name}</span>
+          <span className="text-muted-foreground"> ({confirmation.dataset.id})</span>
+        </span>
+        <span>
+          <span className="font-medium text-muted-foreground">Rows </span>
+          <span className="text-foreground">{formatRowCount(confirmation.dataset.rowCount)}</span>
+        </span>
         {confirmation.columns.length > 0 && (
-          <>
-            <dt className="font-medium text-muted-foreground">Columns</dt>
-            <dd className="text-foreground">
-              {confirmation.columns.join(", ")}
-            </dd>
-          </>
+          <span className="basis-full">
+            <span className="font-medium text-muted-foreground">Columns </span>
+            <span className="text-foreground">{confirmation.columns.join(", ")}</span>
+          </span>
         )}
-      </dl>
+      </div>
+
+      {/* Filters section — dedicated interactive area */}
+      <div className="mb-4 rounded-lg border border-white/[0.08] bg-white/[0.02] px-3.5 py-3">
+        <div className="mb-2.5 flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <Filter className="size-3 text-muted-foreground" aria-hidden="true" />
+            <span className="text-xs font-medium text-muted-foreground">Filters</span>
+            {filters.length > 0 && (
+              <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-medium text-primary">
+                {filters.length}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => addFilterRef.current?.()}
+            className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-primary transition-colors hover:bg-primary/10"
+            aria-label="Add filter"
+          >
+            <Plus className="size-3" aria-hidden="true" />
+            Add
+          </button>
+        </div>
+        <FilterEditor
+          filters={filters}
+          availableColumns={availableColumns}
+          onChange={setFilters}
+          onAddRef={addFilterRef}
+        />
+        {filters.length === 0 && (
+          <p className="mt-1 text-xs text-muted-foreground/60">No filters applied</p>
+        )}
+      </div>
+
+      {/* Technical details — standalone collapsible */}
+      {confirmation.technicalNotes && (
+        <div className="mb-4">
+          <button
+            type="button"
+            onClick={() => setShowTechnical((v) => !v)}
+            aria-label={showTechnical ? "Hide technical details" : "Show technical details"}
+            aria-expanded={showTechnical}
+            className={cn(
+              "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium transition-colors",
+              "text-muted-foreground hover:bg-white/[0.04] hover:text-foreground",
+              showTechnical && "bg-white/[0.03] text-foreground"
+            )}
+          >
+            <Info className="size-3.5" aria-hidden="true" />
+            Technical details
+            <ChevronDown
+              className={cn("ml-auto size-3.5 transition-transform", showTechnical && "rotate-180")}
+              aria-hidden="true"
+            />
+          </button>
+          {showTechnical && (
+            <div className="mt-1 rounded-lg border border-white/[0.06] bg-white/[0.02] px-3.5 py-3">
+              <dl className="space-y-3 text-xs">
+                {confirmation.technicalNotes.columnMappings.length > 0 && (
+                  <div>
+                    <dt className="mb-1 font-medium text-muted-foreground">Columns used</dt>
+                    <dd className="space-y-1">
+                      {confirmation.technicalNotes.columnMappings.map((m, i) => (
+                        <p key={i} className="text-foreground/70">
+                          <code className="rounded bg-white/[0.06] px-1 py-0.5 font-mono text-[11px]">{m.fieldName}</code>
+                          {" "}&mdash; {m.rationale}
+                        </p>
+                      ))}
+                    </dd>
+                  </div>
+                )}
+                {confirmation.technicalNotes.assumptions.length > 0 && (
+                  <div>
+                    <dt className="mb-1 font-medium text-muted-foreground">Assumptions</dt>
+                    <dd>
+                      <ul className="list-inside list-disc text-foreground/70">
+                        {confirmation.technicalNotes.assumptions.map((a, i) => (
+                          <li key={i}>{a}</li>
+                        ))}
+                      </ul>
+                    </dd>
+                  </div>
+                )}
+                {confirmation.technicalNotes.exclusions.length > 0 && (
+                  <div>
+                    <dt className="mb-1 font-medium text-muted-foreground">Exclusions</dt>
+                    <dd>
+                      <ul className="list-inside list-disc text-foreground/70">
+                        {confirmation.technicalNotes.exclusions.map((e, i) => (
+                          <li key={i}>{e}</li>
+                        ))}
+                      </ul>
+                    </dd>
+                  </div>
+                )}
+              </dl>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* SoQL reveal */}
       {showSoql && (

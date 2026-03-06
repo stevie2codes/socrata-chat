@@ -54,6 +54,12 @@ export const SHORTCUTS: ShortcutDefinition[] = [
     ctrl: true,
     description: "Export current results",
   },
+  {
+    id: "toggle-history",
+    key: "h",
+    ctrl: true,
+    description: "Toggle chat history",
+  },
 ]
 
 /**

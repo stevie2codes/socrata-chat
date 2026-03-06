@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { X, Plus } from "lucide-react";
+import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -17,6 +17,8 @@ interface FilterEditorProps {
   filters: QueryFilter[];
   availableColumns: DatasetColumn[];
   onChange: (filters: QueryFilter[]) => void;
+  /** Expose the add handler so parent can trigger it from a header button */
+  onAddRef?: React.MutableRefObject<(() => void) | null>;
 }
 
 /** Build a human-readable label like "name equals 'Alice'" or "age > 30" */
@@ -45,6 +47,7 @@ export function FilterEditor({
   filters,
   availableColumns,
   onChange,
+  onAddRef,
 }: FilterEditorProps) {
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
@@ -70,6 +73,9 @@ export function FilterEditor({
     onChange(next);
     setEditingIndex(next.length - 1);
   };
+
+  // Expose add handler to parent
+  if (onAddRef) onAddRef.current = handleAddFilter;
 
   const handleUpdateFilter = (
     index: number,
@@ -213,14 +219,6 @@ export function FilterEditor({
         );
       })}
 
-      <button
-        onClick={handleAddFilter}
-        className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
-        aria-label="Add filter"
-      >
-        <Plus className="size-3" aria-hidden="true" />
-        Add filter
-      </button>
     </div>
   );
 }

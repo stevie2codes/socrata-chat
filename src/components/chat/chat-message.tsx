@@ -93,7 +93,7 @@ export function ChatMessage({ message, isStreaming = false, isLast = false, onSu
 
   if (isUser) {
     return (
-      <article role="article" aria-label={ariaLabel} className="flex w-full justify-end">
+      <article role="article" aria-label={ariaLabel} className="mx-auto flex w-full max-w-[720px] justify-end">
         <div
           className={cn(
             "glass max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
@@ -108,10 +108,9 @@ export function ChatMessage({ message, isStreaming = false, isLast = false, onSu
 
   return (
     <article role="article" aria-label={ariaLabel} className="flex w-full justify-start">
-      <div className="max-w-full text-sm leading-[1.7]">
-        {hasText && <MarkdownContent content={textContent} />}
-
-        {/* Render completed tool results + client-side tools awaiting input */}
+      <div className="w-full text-sm leading-[1.7]">
+        {/* Render tool results FIRST — data is the star, text is supporting.
+            Tool results (DataTable) get full container width (up to 960px). */}
         {message.parts
           .filter(
             (part): part is Extract<typeof part, { state: string }> => {
@@ -133,77 +132,84 @@ export function ChatMessage({ message, isStreaming = false, isLast = false, onSu
                 toolName={toolName}
                 toolCallId={typedPart.toolCallId as string}
                 output={output}
+                input={typedPart.input}
+                isLast={isLast}
                 onConfirmRun={onConfirmRun}
                 onConfirmAdjust={onConfirmAdjust}
               />
             );
           })}
 
-        {/* Render tool errors */}
-        {message.parts
-          .filter(
-            (part): part is Extract<typeof part, { state: string }> =>
-              isToolUIPart(part) && part.state === "output-error"
-          )
-          .map((part, i) => {
-            const err = (part as Record<string, unknown>).output;
-            const message =
-              err && typeof err === "object" && "message" in err
-                ? String((err as { message: string }).message)
-                : "Something went wrong while running this tool.";
-            const code =
-              err && typeof err === "object" && "errorCode" in err
-                ? String((err as { errorCode: string }).errorCode)
-                : undefined;
-            return <ErrorCallout key={`err-${i}`} message={message} errorCode={code} />;
-          })}
+        {/* Text and non-data content stay at readable 720px max */}
+        <div className="max-w-[720px]">
+          {hasText && <MarkdownContent content={textContent} />}
 
-        {suggestions.length > 0 && onSuggestionSelect && (
-          <SuggestionChips suggestions={suggestions} onSelect={onSuggestionSelect} />
-        )}
+          {/* Render tool errors */}
+          {message.parts
+            .filter(
+              (part): part is Extract<typeof part, { state: string }> =>
+                isToolUIPart(part) && part.state === "output-error"
+            )
+            .map((part, i) => {
+              const err = (part as Record<string, unknown>).output;
+              const message =
+                err && typeof err === "object" && "message" in err
+                  ? String((err as { message: string }).message)
+                  : "Something went wrong while running this tool.";
+              const code =
+                err && typeof err === "object" && "errorCode" in err
+                  ? String((err as { errorCode: string }).errorCode)
+                  : undefined;
+              return <ErrorCallout key={`err-${i}`} message={message} errorCode={code} />;
+            })}
 
-        {isStreaming && hasText && (
-          <span
-            className="ml-0.5 inline-block h-4 w-0.5 align-middle"
-            style={{
-              background: "var(--primary)",
-              boxShadow: "0 0 8px var(--glow)",
-              animation: "glow-pulse 1s ease-in-out infinite",
-            }}
-          />
-        )}
+          {suggestions.length > 0 && onSuggestionSelect && (
+            <SuggestionChips suggestions={suggestions} onSelect={onSuggestionSelect} />
+          )}
 
-        {isStreaming && activeToolName && (
-          <div className="mt-3 flex items-center gap-3">
-            <div className="relative h-0.5 w-32 overflow-hidden rounded-full bg-glass">
-              <div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: "linear-gradient(90deg, transparent, var(--primary), transparent)",
-                  animation: "shimmer 1.8s ease-in-out infinite",
-                }}
-              />
+          {isStreaming && hasText && (
+            <span
+              className="ml-0.5 inline-block h-4 w-0.5 align-middle"
+              style={{
+                background: "var(--primary)",
+                boxShadow: "0 0 8px var(--glow)",
+                animation: "glow-pulse 1s ease-in-out infinite",
+              }}
+            />
+          )}
+
+          {isStreaming && activeToolName && (
+            <div className="mt-3 flex items-center gap-3">
+              <div className="relative h-0.5 w-32 overflow-hidden rounded-full bg-glass">
+                <div
+                  className="absolute inset-0 rounded-full"
+                  style={{
+                    background: "linear-gradient(90deg, transparent, var(--primary), transparent)",
+                    animation: "shimmer 1.8s ease-in-out infinite",
+                  }}
+                />
+              </div>
+              <span className="text-xs font-medium text-muted-foreground">
+                {TOOL_LABELS[activeToolName] ?? "Working"}...
+              </span>
             </div>
-            <span className="text-xs font-medium text-muted-foreground">
-              {TOOL_LABELS[activeToolName] ?? "Working"}...
-            </span>
-          </div>
-        )}
+          )}
 
-        {isStreaming && isOnlyTools && !activeToolName && (
-          <div className="flex items-center gap-3">
-            <div className="relative h-0.5 w-32 overflow-hidden rounded-full bg-glass">
-              <div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: "linear-gradient(90deg, transparent, var(--primary), transparent)",
-                  animation: "shimmer 1.8s ease-in-out infinite",
-                }}
-              />
+          {isStreaming && isOnlyTools && !activeToolName && (
+            <div className="flex items-center gap-3">
+              <div className="relative h-0.5 w-32 overflow-hidden rounded-full bg-glass">
+                <div
+                  className="absolute inset-0 rounded-full"
+                  style={{
+                    background: "linear-gradient(90deg, transparent, var(--primary), transparent)",
+                    animation: "shimmer 1.8s ease-in-out infinite",
+                  }}
+                />
+              </div>
+              <span className="text-xs font-medium text-muted-foreground">Working...</span>
             </div>
-            <span className="text-xs font-medium text-muted-foreground">Working...</span>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </article>
   );

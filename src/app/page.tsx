@@ -8,13 +8,15 @@ import {
   getToolName,
 } from "ai";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { SquarePen, PanelRight } from "lucide-react";
+import { SquarePen, PanelRight, PanelLeft } from "lucide-react";
 import { ChatMessageList } from "@/components/chat/chat-message-list";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ErrorCallout } from "@/components/data/error-callout";
 import { StarterPrompts } from "@/components/chat/starter-prompts";
 import { KeyboardHelpDialog } from "@/components/chat/keyboard-help-dialog";
 import { ContextSidebar } from "@/components/sidebar/context-sidebar";
+import { ChatHistorySidebar } from "@/components/sidebar/chat-history-sidebar";
+import { listChats, saveChat, loadChat, deleteChat, generateTitle } from "@/lib/chat-store";
 import { createShortcutHandler } from "@/lib/keyboard-shortcuts";
 import { downloadCsv } from "@/lib/utils/csv-export";
 import { PORTALS, DEFAULT_PORTAL, findPortal } from "@/lib/portals";
@@ -83,12 +85,31 @@ export default function Home() {
 
   useSessionSync(messages, dispatch, portalDomain);
 
+  // Auto-save chat to localStorage (debounced)
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (messages.length === 0) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      const title = generateTitle(messages as Parameters<typeof generateTitle>[0]);
+      saveChat(session.conversationId, title, session.portal, messages, session);
+      setChatList(listChats());
+    }, 500);
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, [messages, session]);
+
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
 
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   const [showHelp, setShowHelp] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [chatList, setChatList] = useState(() =>
+    typeof window !== "undefined" ? listChats() : []
+  );
 
   const portal = findPortal(portalDomain) ?? DEFAULT_PORTAL;
   const isLoading = status === "streaming" || status === "submitted";
@@ -180,7 +201,33 @@ export default function Home() {
     setMessages([]);
     dispatch({ type: "RESET" });
     setSidebarOpen(false);
+    setChatList(listChats());
   }, [setMessages, dispatch]);
+
+  const handleLoadChat = useCallback(
+    (id: string) => {
+      if (id === session.conversationId) return;
+      const data = loadChat(id);
+      if (!data) return;
+      setMessages(data.messages as Parameters<typeof setMessages>[0]);
+      dispatch({ type: "RESTORE", payload: data.session });
+      setPortalDomain(data.session.portal);
+    },
+    [session.conversationId, setMessages, dispatch]
+  );
+
+  const handleDeleteChat = useCallback(
+    (id: string) => {
+      deleteChat(id);
+      setChatList(listChats());
+      // If deleting the active chat, start fresh
+      if (id === session.conversationId) {
+        setMessages([]);
+        dispatch({ type: "RESET" });
+      }
+    },
+    [session.conversationId, setMessages, dispatch]
+  );
 
   useEffect(() => {
     const shortcuts = new Map<string, () => void>();
@@ -208,6 +255,7 @@ export default function Home() {
         }
       }
     });
+    shortcuts.set("toggle-history", () => setHistoryOpen((prev) => !prev));
     shortcuts.set("escape", () => {
       if (isLoadingRef.current) {
         stopRef.current();
@@ -223,6 +271,25 @@ export default function Home() {
   if (isHero) {
     return (
       <div className="relative z-10 flex h-dvh flex-col items-center justify-center px-4">
+        {/* History toggle — top-left corner */}
+        {chatList.length > 0 && (
+          <button
+            onClick={() => setHistoryOpen((prev) => !prev)}
+            aria-label="Toggle chat history"
+            className="fixed left-4 top-4 z-20 flex size-8 items-center justify-center rounded-lg text-muted-foreground/60 transition-colors hover:bg-white/[0.08] hover:text-foreground"
+          >
+            <PanelLeft className="size-4" />
+          </button>
+        )}
+        <ChatHistorySidebar
+          open={historyOpen}
+          onClose={() => setHistoryOpen(false)}
+          chats={chatList}
+          activeChatId={session.conversationId}
+          onSelectChat={handleLoadChat}
+          onDeleteChat={handleDeleteChat}
+          onNewChat={handleNewChat}
+        />
         <div
           className="flex w-full max-w-[720px] flex-col items-center gap-10"
           style={{ animation: "fade-in-up 0.8s ease-out both" }}
@@ -271,6 +338,13 @@ export default function Home() {
       <header className="glass-subtle sticky top-0 z-20 flex shrink-0 items-center justify-between border-b border-white/[0.08] px-4 py-3">
         <div className="flex items-center gap-3">
           <button
+            onClick={() => setHistoryOpen((prev) => !prev)}
+            aria-label="Toggle chat history"
+            className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground"
+          >
+            <PanelLeft className="size-4" />
+          </button>
+          <button
             onClick={handleNewChat}
             aria-label="New chat"
             className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-white/[0.08] hover:text-foreground"
@@ -299,9 +373,12 @@ export default function Home() {
         id="main-content"
         role="main"
         className="flex min-h-0 flex-1 flex-col transition-[padding] duration-200"
-        style={{ paddingRight: sidebarOpen ? 280 : 0 }}
+        style={{
+          paddingRight: sidebarOpen ? 280 : 0,
+          paddingLeft: historyOpen ? 280 : 0,
+        }}
       >
-        <div className="mx-auto flex w-full min-h-0 max-w-[720px] flex-1 flex-col pb-32">
+        <div className="mx-auto flex w-full min-h-0 max-w-[960px] flex-1 flex-col pb-32">
           <ChatMessageList
             messages={messages}
             isLoading={isLoading}
@@ -315,7 +392,10 @@ export default function Home() {
       {/* Floating bottom dock */}
       <div
         className="pointer-events-none fixed inset-x-0 bottom-0 z-20"
-        style={{ paddingRight: sidebarOpen ? 280 : 0 }}
+        style={{
+          paddingRight: sidebarOpen ? 280 : 0,
+          paddingLeft: historyOpen ? 280 : 0,
+        }}
       >
         {/* Fade-out gradient — content dissolves into the dock */}
         <div className="h-10 bg-gradient-to-b from-transparent to-background/80" />
@@ -343,6 +423,16 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      <ChatHistorySidebar
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        chats={chatList}
+        activeChatId={session.conversationId}
+        onSelectChat={handleLoadChat}
+        onDeleteChat={handleDeleteChat}
+        onNewChat={handleNewChat}
+      />
 
       <ContextSidebar
         open={sidebarOpen}

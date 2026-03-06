@@ -63,3 +63,11 @@ export type SuggestionChip = {
   label: string;
   action: string;
 };
+
+export interface ChatSummary {
+  id: string;
+  title: string;
+  portal: string;
+  createdAt: number;
+  updatedAt: number;
+}

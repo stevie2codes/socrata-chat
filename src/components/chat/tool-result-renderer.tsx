@@ -4,13 +4,16 @@ import type { CatalogResult, QueryResult } from "@/lib/socrata/api-client";
 import type { QueryConfirmation, QueryFilter } from "@/types";
 import { DatasetCardList } from "@/components/data/dataset-card-list";
 import { DataTable } from "@/components/data/data-table";
-import { QueryConfirmationCard } from "@/components/data/query-confirmation-card";
+import { QueryConfirmationCard, QueryPlanSummary } from "@/components/data/query-confirmation-card";
 import { ProvenanceFooter } from "@/components/data/provenance-footer";
 
 interface ToolResultRendererProps {
   toolName: string;
   toolCallId?: string;
   output: unknown;
+  /** Original tool input — used for collapsed confirm_query summaries */
+  input?: unknown;
+  isLast?: boolean;
   onConfirmRun?: (args: { toolCallId: string; filters: { original: QueryFilter[]; current: QueryFilter[] } }) => void;
   onConfirmAdjust?: (args: { toolCallId: string }) => void;
 }
@@ -48,6 +51,8 @@ export function ToolResultRenderer({
   toolName,
   toolCallId,
   output,
+  input,
+  isLast,
   onConfirmRun,
   onConfirmAdjust,
 }: ToolResultRendererProps) {
@@ -55,6 +60,7 @@ export function ToolResultRenderer({
     return <DatasetCardList datasets={output} />;
   }
 
+  // Active confirmation card — user hasn't acted yet
   if (toolName === "confirm_query" && isQueryConfirmation(output)) {
     return (
       <QueryConfirmationCard
@@ -66,11 +72,25 @@ export function ToolResultRenderer({
     );
   }
 
+  // Completed confirmation — collapse to summary
+  if (toolName === "confirm_query" && input && isQueryConfirmation(input)) {
+    const decision =
+      output && typeof output === "object" && "decision" in output
+        ? (output as { decision: string }).decision
+        : "run";
+    return (
+      <QueryPlanSummary
+        confirmation={input}
+        decision={decision as "run" | "adjust"}
+      />
+    );
+  }
+
   if (toolName === "query_dataset" && isQueryResult(output)) {
     const limitApplied = output.data.length >= 100 && !output.query.match(/LIMIT\s+\d+/i);
     return (
       <>
-        <DataTable result={output} />
+        <DataTable result={output} defaultCollapsed={!isLast} />
         {output.provenance && (
           <ProvenanceFooter
             provenance={output.provenance}
