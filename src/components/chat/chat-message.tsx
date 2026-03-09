@@ -114,9 +114,15 @@ export function ChatMessage({ message, isStreaming = false, isLast = false, onSu
         )
     : null;
 
+  // Hide streaming phase for confirm_query only once the card is visible (input-available).
+  // While arguments are still being generated, show "Preparing query plan" so there's feedback.
   const activeToolName =
     activeToolPart && isToolUIPart(activeToolPart)
-      ? getToolName(activeToolPart)
+      ? (() => {
+          const name = getToolName(activeToolPart);
+          if (name === "confirm_query" && activeToolPart.state === "input-available") return null;
+          return name;
+        })()
       : null;
 
   const hasText = textContent.trim().length > 0;
@@ -166,14 +172,14 @@ export function ChatMessage({ message, isStreaming = false, isLast = false, onSu
               return part.state === "output-available";
             }
           )
-          .map((part, i) => {
+          .map((part) => {
             const toolName = getToolName(part as Parameters<typeof getToolName>[0]);
             const typedPart = part as Record<string, unknown>;
             // For client-side tools awaiting input, use the tool's input args as the display data
             const output = typedPart.state === "input-available" ? typedPart.input : typedPart.output;
             return (
               <ToolResultRenderer
-                key={i}
+                key={typedPart.toolCallId as string}
                 toolName={toolName}
                 toolCallId={typedPart.toolCallId as string}
                 output={output}
@@ -200,8 +206,9 @@ export function ChatMessage({ message, isStreaming = false, isLast = false, onSu
               (part): part is Extract<typeof part, { state: string }> =>
                 isToolUIPart(part) && part.state === "output-error"
             )
-            .map((part, i) => {
-              const err = (part as Record<string, unknown>).output;
+            .map((part) => {
+              const typedErr = part as Record<string, unknown>;
+              const err = typedErr.output;
               const message =
                 err && typeof err === "object" && "message" in err
                   ? String((err as { message: string }).message)
@@ -210,7 +217,7 @@ export function ChatMessage({ message, isStreaming = false, isLast = false, onSu
                 err && typeof err === "object" && "errorCode" in err
                   ? String((err as { errorCode: string }).errorCode)
                   : undefined;
-              return <ErrorCallout key={`err-${i}`} message={message} errorCode={code} />;
+              return <ErrorCallout key={`err-${typedErr.toolCallId}`} message={message} errorCode={code} />;
             })}
 
           {suggestions.length > 0 && onSuggestionSelect && (

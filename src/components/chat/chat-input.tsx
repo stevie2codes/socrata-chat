@@ -32,14 +32,18 @@ function useRotatingText(texts: string[], intervalMs = 4000) {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
+    let fadeTimeout: ReturnType<typeof setTimeout>;
     const timer = setInterval(() => {
       setVisible(false);
-      setTimeout(() => {
+      fadeTimeout = setTimeout(() => {
         setIndex((i) => (i + 1) % texts.length);
         setVisible(true);
       }, 300);
     }, intervalMs);
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      clearTimeout(fadeTimeout);
+    };
   }, [texts.length, intervalMs]);
 
   return { text: texts[index], visible };

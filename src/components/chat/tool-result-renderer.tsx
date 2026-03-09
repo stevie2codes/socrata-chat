@@ -62,12 +62,27 @@ export function ToolResultRenderer({
 
   // Active confirmation card — user hasn't acted yet
   if (toolName === "confirm_query" && isQueryConfirmation(output)) {
+    if (!toolCallId) {
+      console.error("[confirm_query] Missing toolCallId — card will not be interactive");
+    }
     return (
       <QueryConfirmationCard
         confirmation={output}
         toolCallId={toolCallId}
-        onRun={(filters) => toolCallId && onConfirmRun?.({ toolCallId, filters })}
-        onAdjust={() => toolCallId && onConfirmAdjust?.({ toolCallId })}
+        onRun={(filters) => {
+          if (!toolCallId) {
+            console.error("[confirm_query] Cannot run: missing toolCallId");
+            return;
+          }
+          onConfirmRun?.({ toolCallId, filters });
+        }}
+        onAdjust={() => {
+          if (!toolCallId) {
+            console.error("[confirm_query] Cannot adjust: missing toolCallId");
+            return;
+          }
+          onConfirmAdjust?.({ toolCallId });
+        }}
       />
     );
   }
@@ -78,10 +93,11 @@ export function ToolResultRenderer({
       output && typeof output === "object" && "decision" in output
         ? (output as { decision: string }).decision
         : "run";
+    const validDecision = decision === "adjust" ? "adjust" : "run";
     return (
       <QueryPlanSummary
         confirmation={input}
-        decision={decision as "run" | "adjust"}
+        decision={validDecision}
       />
     );
   }

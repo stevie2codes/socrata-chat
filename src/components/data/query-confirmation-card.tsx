@@ -109,10 +109,13 @@ export function QueryConfirmationCard({
 
   const handleRun = () => {
     setActed(true);
-    onRun({ original: normalizedFilters, current: filters });
+    // Strip incomplete filters (empty column/operator/value) before sending to Claude
+    const validFilters = filters.filter((f) => f.column && f.operator && f.value);
+    onRun({ original: normalizedFilters, current: validFilters });
   };
 
   const handleAdjust = () => {
+    setActed(true);
     onAdjust();
   };
 
